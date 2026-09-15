@@ -100,4 +100,32 @@ Seed credentials (override via `SEED_ADMIN_NATIONAL_ID` / `SEED_ADMIN_PASSWORD` 
   other open, double-discounting and double-paying are both rejected
   (400), and an Owner is correctly blocked from entering an expense (403).
 
-Not yet implemented: Reporting and the frontend — tracked as later phases.
+## Phase 5
+
+- `GET /reports/{summary,products,waiters,expenses}?period=day|week|month|quarter|semester|year&date=...`,
+  gated behind `VIEW_DASHBOARD` (Owner, Manager). "Sales" is money actually
+  collected (`Payment.createdAt`), not orders placed - matching the
+  cash-accounting mental model from discovery. Per-item discounts are
+  applied when computing product/waiter revenue
+  (`src/common/order-item-pricing.util.ts`), so these numbers match what
+  was actually charged.
+- `User.email` (optional) added for Owner/Manager - needed to have
+  somewhere to send the monthly summary.
+- `MonthlySummaryService` (`src/reports/monthly-summary.service.ts`) runs
+  automatically on the 1st of each month via `@nestjs/schedule`, and can
+  be triggered on demand with `POST /reports/monthly-summary/trigger` to
+  check or resend without waiting for the schedule. Reports on the
+  previous calendar month, per Owner/Manager with an email on file.
+- `EmailService` (`src/email/email.service.ts`) mirrors the printer
+  pattern: real SMTP when `SMTP_HOST` is configured, otherwise logs the
+  email instead of failing, so this runs in dev/CI without mail
+  credentials.
+- Verified live: a Waiter is blocked from the dashboard (403); an Owner's
+  daily summary, product breakdown, waiter performance, and expense
+  breakdown all compute correctly against real Payment/Expense data
+  (including the 10% discount from Phase 4 flowing through correctly);
+  the monthly trigger correctly scopes to the *previous* calendar month
+  (verified $0 for August when all test data was from September) and logs
+  a fully rendered simulated email.
+
+Not yet implemented: the frontend — tracked as the final phase.

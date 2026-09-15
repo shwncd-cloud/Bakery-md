@@ -34,16 +34,18 @@ async function main() {
 
   const ownerNationalId = process.env.SEED_OWNER_NATIONAL_ID ?? '1111111111';
   const ownerPassword = process.env.SEED_OWNER_PASSWORD ?? 'change-me-now';
+  const ownerEmail = process.env.SEED_OWNER_EMAIL ?? 'owner@example.com';
 
   const owner = await prisma.user.upsert({
     where: { nationalId: ownerNationalId },
-    update: {},
+    update: { email: ownerEmail },
     create: {
       nationalId: ownerNationalId,
       fullName: 'Bakery Owner',
       passwordHash: await bcrypt.hash(ownerPassword, 10),
       role: Role.OWNER,
       tenantId: tenant.id,
+      email: ownerEmail,
     },
   });
 

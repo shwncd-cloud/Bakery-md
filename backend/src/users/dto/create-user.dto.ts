@@ -1,5 +1,5 @@
 import { Role } from '@prisma/client';
-import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsOptional()
@@ -20,4 +20,11 @@ export class CreateUserDto {
 
   @IsEnum(Role)
   role!: Role;
+
+  /// Required in practice for Owner/Manager - it's where the monthly
+  /// summary email goes - but not enforced here since Cashier/Waiter/Cook
+  /// don't need one.
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }

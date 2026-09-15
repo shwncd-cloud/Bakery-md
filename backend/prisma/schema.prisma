@@ -78,6 +78,9 @@ model User {
   fullName     String
   passwordHash String
   role         Role
+  /// Needed for the monthly summary email (Owner/Manager). Optional since
+  /// Cashier/Waiter/Cook logins don't require one.
+  email        String?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 

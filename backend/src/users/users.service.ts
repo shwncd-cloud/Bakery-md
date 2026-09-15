@@ -28,8 +28,9 @@ export class UsersService {
         fullName: dto.fullName,
         passwordHash,
         role: dto.role,
+        email: dto.email,
       },
-      select: { id: true, nationalId: true, fullName: true, role: true, tenantId: true, active: true },
+      select: { id: true, nationalId: true, fullName: true, role: true, tenantId: true, active: true, email: true },
     });
   }
 

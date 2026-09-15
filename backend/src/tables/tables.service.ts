@@ -54,7 +54,7 @@ export class TablesService {
     }
     return this.prisma.orderItem.findMany({
       where: { tenantId, tableId, status: { in: OPEN_STATUSES } },
-      include: { product: true },
+      include: { product: true, discounts: true },
       orderBy: { createdAt: 'asc' },
     });
   }

@@ -42,7 +42,7 @@ export class OrderItemsService {
     return this.prisma.orderItem.update({
       where: { id: item.id },
       data: { quantity: dto.quantity },
-      include: { product: true },
+      include: { product: true, discounts: true },
     });
   }
 

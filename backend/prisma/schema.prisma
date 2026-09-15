@@ -1,0 +1,239 @@
+// Bakery-MD POS - core data model
+// Conceptual entities from the approved design phase (Task 002, Step 4),
+// translated into a concrete schema. Tenant isolation is enforced by every
+// tenant-owned row carrying a tenantId, checked in application code via
+// the request-scoped tenant guard (see src/common).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLATFORM_ADMIN
+  OWNER
+  MANAGER
+  CASHIER
+  WAITER
+  COOK
+}
+
+enum OrderItemStatus {
+  ORDERED
+  SENT_TO_KITCHEN
+  SERVED
+  PAID
+  CANCELED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+}
+
+/// A business on the platform. The pilot bakery is the first row; the
+/// platform is designed to hold many, each fully isolated from the others.
+model Tenant {
+  id                      String   @id @default(uuid())
+  name                    String
+  country                 String   @default("CO")
+  /// Off by default: role assignment stays a Platform Admin action until
+  /// this tenant's Owner is explicitly delegated that capability.
+  roleAssignmentDelegated Boolean  @default(false)
+  createdAt               DateTime @default(now())
+
+  users     User[]
+  products  Product[]
+  tables    Table[]
+  orderItems OrderItem[]
+  kitchenTickets KitchenTicket[]
+  payments  Payment[]
+  expenses  Expense[]
+
+  @@map("tenants")
+}
+
+/// A person who can log in. Platform Admin accounts have no tenantId.
+/// Every other role belongs to exactly one tenant.
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  /// Colombian cedula (or equivalent national ID) - used as login username.
+  nationalId   String   @unique
+  fullName     String
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  orderItemsTaken   OrderItem[] @relation("OrderItemTakenBy")
+  paymentsProcessed Payment[]   @relation("PaymentProcessedBy")
+  discountsApplied  Discount[]  @relation("DiscountAppliedBy")
+  expensesEntered   Expense[]   @relation("ExpenseEnteredBy")
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+/// Catalog item. Behavior flags - not a hardcoded product type - are what
+/// let bakery goods, made-to-order dishes, and stocked beverages share one
+/// model, and what let a future vertical (fast food, retail) reuse it too.
+model Product {
+  id                  String   @id @default(uuid())
+  tenantId            String
+  tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  name                String
+  /// Price per unit, in COP cents to avoid floating point money errors.
+  unitPriceCents      Int
+  requiresKitchenTicket Boolean @default(false)
+  trackQuantitySold   Boolean  @default(false)
+  active              Boolean  @default(true)
+  createdAt           DateTime @default(now())
+
+  orderItems OrderItem[]
+
+  @@index([tenantId])
+  @@map("products")
+}
+
+/// A physical table. Supports shared tables (multiple concurrent parties)
+/// implicitly: OrderItems reference the table directly, not a per-party
+/// sub-order, which is what makes per-item billing possible.
+model Table {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  label    String
+
+  orderItems OrderItem[]
+  kitchenTickets KitchenTicket[]
+
+  @@index([tenantId])
+  @@map("tables")
+}
+
+/// The addressable unit of an order. Each item ordered at a table is its
+/// own row with its own lifecycle and its own payment - this is what makes
+/// "pay for individual items at a shared table" possible without modeling
+/// separate sub-orders per party.
+model OrderItem {
+  id              String          @id @default(uuid())
+  tenantId        String
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  tableId         String
+  table           Table           @relation(fields: [tableId], references: [id])
+  productId       String
+  product         Product         @relation(fields: [productId], references: [id])
+  quantity        Int             @default(1)
+  /// Price snapshot at order time, so later price changes don't rewrite history.
+  unitPriceCents  Int
+  status          OrderItemStatus @default(ORDERED)
+  takenByUserId   String
+  takenByUser     User            @relation("OrderItemTakenBy", fields: [takenByUserId], references: [id])
+  kitchenTicketId String?
+  kitchenTicket   KitchenTicket?  @relation(fields: [kitchenTicketId], references: [id])
+  paymentId       String?
+  payment         Payment?        @relation(fields: [paymentId], references: [id])
+  shift           Shift
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  discounts Discount[]
+
+  @@index([tenantId])
+  @@index([tableId])
+  @@index([kitchenTicketId])
+  @@index([paymentId])
+  @@map("order_items")
+}
+
+/// Generated once a waiter confirms items that require kitchen prep, and
+/// printed to the single Wi-Fi thermal printer. One-directional: once
+/// printed, its OrderItems are locked from further waiter edits.
+model KitchenTicket {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tableId   String
+  table     Table    @relation(fields: [tableId], references: [id])
+  printedAt DateTime?
+  createdAt DateTime @default(now())
+
+  orderItems OrderItem[]
+
+  @@index([tenantId])
+  @@map("kitchen_tickets")
+}
+
+/// A payment settles one or more OrderItems. Recorded, not verified, for
+/// bank transfers - matching the bakery's current manual-verification
+/// process (the system trusts what the cashier records).
+model Payment {
+  id             String        @id @default(uuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id])
+  method         PaymentMethod
+  amountCents    Int
+  processedByUserId String
+  processedByUser   User       @relation("PaymentProcessedBy", fields: [processedByUserId], references: [id])
+  shift          Shift
+  createdAt      DateTime      @default(now())
+
+  orderItems OrderItem[]
+
+  @@index([tenantId])
+  @@map("payments")
+}
+
+/// A discount on a single OrderItem. A reason is mandatory - this is the
+/// accountability control against discount abuse identified during
+/// discovery, not an optional field.
+model Discount {
+  id              String       @id @default(uuid())
+  tenantId        String
+  orderItemId     String
+  orderItem       OrderItem    @relation(fields: [orderItemId], references: [id])
+  type            DiscountType
+  value           Int
+  reason          String
+  appliedByUserId String
+  appliedByUser   User         @relation("DiscountAppliedBy", fields: [appliedByUserId], references: [id])
+  createdAt       DateTime     @default(now())
+
+  @@index([tenantId])
+  @@index([orderItemId])
+  @@map("discounts")
+}
+
+/// Daily outflow entry. Independent of orders; feeds the
+/// revenue-minus-expenses "daily utility" figure the owner tracks today by hand.
+model Expense {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  category        String
+  amountCents     Int
+  description     String?
+  enteredByUserId String
+  enteredByUser   User     @relation("ExpenseEnteredBy", fields: [enteredByUserId], references: [id])
+  shift           Shift
+  createdAt       DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("expenses")
+}

@@ -22,9 +22,9 @@ export enum Permission {
 /// tenant's roleAssignmentDelegated flag is turned on by a Platform Admin
 /// (see PermissionsGuard). Everyone else's permissions are fixed.
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  PLATFORM_ADMIN: [Permission.ASSIGN_ROLES, Permission.MANAGE_TENANT_USERS],
-  OWNER: [Permission.VIEW_DASHBOARD],
-  MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE],
+  PLATFORM_ADMIN: [Permission.ASSIGN_ROLES, Permission.MANAGE_TENANT_USERS, Permission.MANAGE_CATALOG],
+  OWNER: [Permission.VIEW_DASHBOARD, Permission.MANAGE_CATALOG],
+  MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE, Permission.MANAGE_CATALOG],
   CASHIER: [
     Permission.TAKE_ORDER,
     Permission.EDIT_PRE_KITCHEN_ITEM,

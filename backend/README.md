@@ -34,6 +34,28 @@ Seed credentials (override via `SEED_ADMIN_NATIONAL_ID` / `SEED_ADMIN_PASSWORD` 
   Platform Admin can assign roles until a tenant's
   `roleAssignmentDelegated` flag is turned on for its Owner.
 
-Not yet implemented: Catalog, Tables/Orders, Kitchen Ticket printing,
-Payments/Discounts/Expenses, Reporting, and the frontend — tracked as
-later phases.
+## Phase 2
+
+- Product catalog (`requiresKitchenTicket` / `trackQuantitySold` flags),
+  gated behind `MANAGE_CATALOG` (Owner, Manager, Platform Admin).
+- Tables, and `POST /tables/:id/merge` for the confirmed merge/move
+  scenario — reassigns all open (non-paid, non-canceled) Order Items from
+  one table to another, covering both "combine two tables" and "move a
+  party."
+- Order Items as the addressable, independently-billable unit: creating,
+  editing and canceling are all blocked once an item leaves the `ORDERED`
+  state (i.e. once it's been sent to the kitchen), enforcing the
+  pre-kitchen-only edit rule from discovery.
+- `getCurrentShift()` (`src/common/shift.util.ts`) derives MORNING/
+  AFTERNOON from the clock via a configurable `SHIFT_BOUNDARY_HOUR` env
+  var — the bakery's actual shift boundary wasn't specified, so this is a
+  reasonable default to revisit, not a confirmed business rule.
+- Verified live: shared-table ordering (two "parties" on one table, each
+  item independently priced/tracked), the pre-kitchen edit lock (edit and
+  cancel both rejected with 403 once an item is marked `SENT_TO_KITCHEN`),
+  the table-merge flow (items move, source table's tab empties), and that
+  a Cook account — which holds no permissions — is correctly blocked from
+  every POS action.
+
+Not yet implemented: Kitchen Ticket printing, Payments/Discounts/
+Expenses, Reporting, and the frontend — tracked as later phases.

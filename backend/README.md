@@ -80,5 +80,24 @@ Seed credentials (override via `SEED_ADMIN_NATIONAL_ID` / `SEED_ADMIN_PASSWORD` 
   editable, the simulated printer logs the exact ticket text, reprint
   works, and sending an already-cleared table is rejected with 400.
 
-Not yet implemented: Payments/Discounts/Expenses, Reporting, and the
-frontend — tracked as later phases.
+## Phase 4
+
+- `POST /order-items/:orderItemId/discounts` — PERCENT or FIXED, mandatory
+  `reason`, gated behind `APPLY_DISCOUNT` (Cashier+). At most one discount
+  per item in v1; a second attempt is rejected rather than stacking.
+- `POST /payments { orderItemIds, method }` settles one or more items in a
+  single payment. This is what makes per-item billing on a shared table
+  real: a cashier can pay for exactly the items one party ordered, leaving
+  the rest of the table's tab open. Rejects if any item is already paid
+  or canceled. Amount is computed from `orderItemLineTotalCents`
+  (`src/common/order-item-pricing.util.ts`), applying each item's
+  discount.
+- `POST /expenses` / `GET /expenses`, gated behind `ENTER_EXPENSE`
+  (Cashier, Manager — not Owner, matching the Phase 1 permission matrix).
+- Verified live: a waiter is blocked from applying a discount (403), a
+  cashier's 10% discount on a 2-coffee item computes correctly (6000 →
+  5400 cents), paying only one item on a two-item shared table leaves the
+  other open, double-discounting and double-paying are both rejected
+  (400), and an Owner is correctly blocked from entering an expense (403).
+
+Not yet implemented: Reporting and the frontend — tracked as later phases.

@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { DiscountsModule } from './discounts/discounts.module';
+import { ExpensesModule } from './expenses/expenses.module';
 import { KitchenTicketsModule } from './kitchen-tickets/kitchen-tickets.module';
 import { OrderItemsModule } from './order-items/order-items.module';
+import { PaymentsModule } from './payments/payments.module';
 import { PrintingModule } from './printing/printing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
@@ -22,6 +25,9 @@ import { UsersModule } from './users/users.module';
     TablesModule,
     OrderItemsModule,
     KitchenTicketsModule,
+    DiscountsModule,
+    PaymentsModule,
+    ExpensesModule,
   ],
 })
 export class AppModule {}

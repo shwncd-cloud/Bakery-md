@@ -18,6 +18,6 @@ starts:
 1. ✅ Backend scaffold + Identity/Tenant/Auth module
 2. ✅ Catalog + Tables/Orders modules
 3. ✅ Kitchen Ticket + printer integration
-4. ⏳ Payments + Discounts + Expenses modules
+4. ✅ Payments + Discounts + Expenses modules
 5. ⏳ Reporting module + monthly email summary
 6. ⏳ PWA frontend

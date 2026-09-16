@@ -15,6 +15,9 @@ from day one.
   (the backend has no route into the bakery's local network). See
   `bridge/README.md`.
 
+See **`DEPLOYMENT.md`** for how to actually host this and reach it from
+the bakery.
+
 ## Status
 
 Implementation is proceeding in phases, each reviewed before the next
@@ -28,7 +31,11 @@ starts:
 6. ✅ PWA frontend (login, floor/order-taking, cashier payment, owner dashboard, offline queue)
 7. ✅ Local print bridge (cloud backend ↔ local printer)
 
-All six design phases plus the print bridge are complete and verified
-live end-to-end. Currently working on: production Dockerfiles and
-deployment documentation (see `DEPLOYMENT.md` once written) so this can
-actually be hosted and reached from the bakery.
+8. ✅ Production Dockerfiles (verified by building and running both containers)
+9. ✅ Deployment documentation (`DEPLOYMENT.md`)
+
+All six design phases, the print bridge, and the path to a real
+deployment are complete. Not yet done: an actual production deployment
+(this has all been built and verified locally/in containers, not hosted
+anywhere reachable yet), real production data (catalog, tables, staff),
+and the printer hasn't been tested against real hardware.

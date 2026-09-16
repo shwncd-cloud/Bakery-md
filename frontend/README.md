@@ -51,3 +51,12 @@ afterward). Two real bugs were found and fixed this way: `GET
 /tables/:id/items` and the order-item update endpoint weren't including
 the `discounts` relation, so an applied discount was invisible in the UI
 despite existing correctly in the database.
+
+## Docker
+
+`Dockerfile` is a portable fallback for self-hosting the built static
+site behind nginx (with SPA fallback routing for react-router). The
+primary deploy path is a static host like Cloudflare Pages, which builds
+straight from the repo and doesn't need this file — see root
+`DEPLOYMENT.md`. Verified locally: built, served the app, and confirmed a
+deep link falls back to `index.html` instead of 404ing.

@@ -130,3 +130,12 @@ clears it from the pending list, and reprint re-queues it.
   a fully rendered simulated email.
 
 Not yet implemented: the frontend — tracked as the final phase.
+
+## Docker
+
+`Dockerfile` is a multi-stage build (installs, generates the Prisma
+client, builds, then a slim runtime image) that runs `prisma migrate
+deploy` before starting. Verified locally: built and run against a real
+Postgres, served a real authenticated login request. Includes `openssl`
+in both stages — Prisma's query engine needs it on Alpine (musl) or it
+silently guesses an engine version and can fail at runtime.

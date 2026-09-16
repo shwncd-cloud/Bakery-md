@@ -139,3 +139,14 @@ deploy` before starting. Verified locally: built and run against a real
 Postgres, served a real authenticated login request. Includes `openssl`
 in both stages — Prisma's query engine needs it on Alpine (musl) or it
 silently guesses an engine version and can fail at runtime.
+
+## Production safety guards
+
+With `NODE_ENV=production` (set in the Dockerfile's runtime stage), the
+app refuses to start unless `JWT_SECRET` has been changed from the
+`change-me-in-production` placeholder — verified directly: it boots fine
+in dev with the default, boots fine in production with a real secret,
+and refuses to boot in production with either the default or a missing
+secret. CORS is also restrictable via `CORS_ORIGIN` (defaults to `*`,
+which is fine for dev but should be set to the deployed frontend's exact
+URL in production).

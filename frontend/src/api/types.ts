@@ -50,7 +50,6 @@ export interface KitchenTicket {
   tableId: string;
   printedAt: string | null;
   orderItems: OrderItem[];
-  printResult?: { success: boolean; error?: string };
 }
 
 export interface Payment {

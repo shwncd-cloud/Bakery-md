@@ -8,7 +8,6 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { KitchenTicketsModule } from './kitchen-tickets/kitchen-tickets.module';
 import { OrderItemsModule } from './order-items/order-items.module';
 import { PaymentsModule } from './payments/payments.module';
-import { PrintingModule } from './printing/printing.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProductsModule } from './products/products.module';
 import { ReportsModule } from './reports/reports.module';
@@ -21,7 +20,6 @@ import { UsersModule } from './users/users.module';
     ConfigModule.forRoot({ isGlobal: true }),
     ScheduleModule.forRoot(),
     PrismaModule,
-    PrintingModule,
     EmailModule,
     AuthModule,
     TenantsModule,

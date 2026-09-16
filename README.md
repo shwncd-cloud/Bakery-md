@@ -10,6 +10,10 @@ from day one.
   for setup and what's implemented so far.
 - `frontend/` — React + Vite PWA, styled to the Hornillas brand. See
   `frontend/README.md`.
+- `bridge/` — small standalone service that runs at the bakery and
+  relays kitchen tickets from the cloud backend to the local printer
+  (the backend has no route into the bakery's local network). See
+  `bridge/README.md`.
 
 ## Status
 
@@ -22,6 +26,9 @@ starts:
 4. ✅ Payments + Discounts + Expenses modules
 5. ✅ Reporting module + monthly email summary
 6. ✅ PWA frontend (login, floor/order-taking, cashier payment, owner dashboard, offline queue)
+7. ✅ Local print bridge (cloud backend ↔ local printer)
 
-All six phases of the initial design are complete and verified live
-end-to-end, backend and frontend together.
+All six design phases plus the print bridge are complete and verified
+live end-to-end. Currently working on: production Dockerfiles and
+deployment documentation (see `DEPLOYMENT.md` once written) so this can
+actually be hosted and reached from the bakery.

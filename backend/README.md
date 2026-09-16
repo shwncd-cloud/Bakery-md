@@ -61,24 +61,25 @@ Seed credentials (override via `SEED_ADMIN_NATIONAL_ID` / `SEED_ADMIN_PASSWORD` 
 
 - Kitchen tickets: `POST /kitchen-tickets { tableId }` bundles every
   currently-`ORDERED` item on that table whose product requires kitchen
-  prep into one ticket, locks those items to `SENT_TO_KITCHEN`, and
-  attempts to print. Items that don't require prep (bakery goods,
-  beverages) are left alone and stay editable.
-- `PrinterService` (`src/printing/printer.service.ts`) is the single
-  abstraction point for "print a ticket" per the architecture decision —
-  today it's one Wi-Fi/network ESC/POS printer (`PRINTER_HOST` /
-  `PRINTER_PORT`, raw TCP on port 9100). With no `PRINTER_HOST`
-  configured it logs the ticket instead of failing, so this runs without
-  physical hardware in dev/CI.
-- Printing is best-effort: a failed print does not lose the order. The
-  `KitchenTicket` row is always created and the items are always locked;
-  `printedAt` stays null on failure and `POST /kitchen-tickets/:id/reprint`
-  retries — matching "if another printout is needed, it can be requested
-  through the app."
+  prep into one ticket and locks those items to `SENT_TO_KITCHEN`. Items
+  that don't require prep (bakery goods, beverages) are left alone and
+  stay editable.
 - Verified live: a table with one kitchen item and one non-kitchen item
   sends only the kitchen item, the non-kitchen item stays `ORDERED` and
-  editable, the simulated printer logs the exact ticket text, reprint
-  works, and sending an already-cleared table is rejected with 400.
+  editable, and sending an already-cleared table is rejected with 400.
+
+**Reworked for deployment** (see root `DEPLOYMENT.md`): the backend never
+talks to the printer directly — a cloud-hosted server has no route into
+the bakery's local network. It only queues tickets (`printedAt` stays
+null); `GET /kitchen-tickets/pending` and `POST
+/kitchen-tickets/:id/mark-printed` are polled/called by the local print
+bridge (`bridge/`), which is the only thing that ever opens a TCP
+connection to the printer. `POST /kitchen-tickets/:id/reprint` now means
+"re-queue" — it clears `printedAt` back to null so the bridge's next poll
+picks it up again, whether it never printed or the copy needs reprinting.
+Verified live: send-to-kitchen queues without attempting to print, the
+pending endpoint returns the exact rendered ticket text, mark-printed
+clears it from the pending list, and reprint re-queues it.
 
 ## Phase 4
 

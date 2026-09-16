@@ -6,10 +6,9 @@ export interface SendEmailResult {
   error?: string;
 }
 
-/// Same pattern as PrinterService: one abstraction point for "send an
-/// email," backed by real SMTP when configured and a log-only simulation
-/// otherwise, so the monthly summary job runs in dev/CI without real
-/// mail credentials.
+/// One abstraction point for "send an email," backed by real SMTP when
+/// configured and a log-only simulation otherwise, so the monthly summary
+/// job runs in dev/CI without real mail credentials.
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);

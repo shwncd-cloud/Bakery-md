@@ -206,13 +206,10 @@ export function TableDetail({
 
       {ticket && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <strong>Ticket de cocina:</strong>{' '}
-          {ticket.printResult?.success || ticket.printedAt ? 'Impreso ✓' : 'No se pudo imprimir'}
-          {!(ticket.printResult?.success ?? true) && (
-            <button className="btn btn-secondary" style={{ marginLeft: 10 }} onClick={handleReprint}>
-              Reintentar impresión
-            </button>
-          )}
+          <strong>Ticket de cocina:</strong> {ticket.printedAt ? 'Impreso ✓' : 'Enviado, esperando impresión...'}
+          <button className="btn btn-secondary" style={{ marginLeft: 10 }} onClick={handleReprint}>
+            Reenviar a la impresora
+          </button>
         </div>
       )}
 

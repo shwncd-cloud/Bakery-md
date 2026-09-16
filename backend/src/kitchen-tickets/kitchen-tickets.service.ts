@@ -1,25 +1,22 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { PrinterService } from '../printing/printer.service';
 
 type TicketWithItems = Prisma.KitchenTicketGetPayload<{
   include: { table: true; orderItems: { include: { product: true } } };
 }>;
 
+/// The backend never talks to the printer directly - a cloud-hosted
+/// server has no route into the bakery's local network. It only queues
+/// tickets (printedAt null); the local print bridge polls
+/// GET /kitchen-tickets/pending and confirms via mark-printed. See
+/// bridge/README.md.
 @Injectable()
 export class KitchenTicketsService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly printer: PrinterService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   /// Bundles every currently-ORDERED, kitchen-required item on a table
-  /// into one ticket, locks those items from further waiter edits, and
-  /// attempts to print. Printing is best-effort: a printer failure does
-  /// not lose the order, it leaves printedAt null so it can be retried
-  /// (see reprint) - matching "if another printout is needed, it can be
-  /// requested through the app."
+  /// into one ticket and locks those items from further waiter edits.
   async sendToKitchen(tenantId: string, tableId: string) {
     const table = await this.prisma.table.findUnique({ where: { id: tableId } });
     if (!table || table.tenantId !== tenantId) {
@@ -47,42 +44,49 @@ export class KitchenTicketsService {
       return created;
     });
 
-    return this.printAndUpdate(tenantId, ticket.id);
+    return this.loadTicket(tenantId, ticket.id);
   }
 
+  /// "If another printout is needed, it can be requested through the
+  /// app" - clearing printedAt just re-queues it for the bridge's next
+  /// poll, whether it never printed or the copy was lost/damaged.
   async reprint(tenantId: string, ticketId: string) {
-    return this.printAndUpdate(tenantId, ticketId);
+    await this.findOne(tenantId, ticketId);
+    await this.prisma.kitchenTicket.update({ where: { id: ticketId }, data: { printedAt: null } });
+    return this.loadTicket(tenantId, ticketId);
   }
 
   async findOne(tenantId: string, ticketId: string) {
-    const ticket = await this.loadTicket(ticketId);
-    if (!ticket || ticket.tenantId !== tenantId) {
+    const ticket = await this.loadTicket(tenantId, ticketId);
+    if (!ticket) {
       throw new NotFoundException('Kitchen ticket not found');
     }
     return ticket;
   }
 
-  private async printAndUpdate(tenantId: string, ticketId: string) {
-    const ticket = await this.loadTicket(ticketId);
-    if (!ticket || ticket.tenantId !== tenantId) {
-      throw new NotFoundException('Kitchen ticket not found');
-    }
-
-    const result = await this.printer.print(this.renderTicketText(ticket));
-
-    const updated = await this.prisma.kitchenTicket.update({
-      where: { id: ticket.id },
-      data: result.success ? { printedAt: new Date() } : {},
+  /// Polled by the print bridge. Rendered ticketText is included so the
+  /// bridge stays a dumb relay - ticket layout knowledge lives here, once.
+  async findPending(tenantId: string) {
+    const tickets = await this.prisma.kitchenTicket.findMany({
+      where: { tenantId, printedAt: null },
+      include: { table: true, orderItems: { include: { product: true } } },
+      orderBy: { createdAt: 'asc' },
     });
-
-    return { ...updated, orderItems: ticket.orderItems, table: ticket.table, printResult: result };
+    return tickets.map((ticket) => ({ ...ticket, ticketText: this.renderTicketText(ticket) }));
   }
 
-  private loadTicket(ticketId: string): Promise<TicketWithItems | null> {
-    return this.prisma.kitchenTicket.findUnique({
+  async markPrinted(tenantId: string, ticketId: string) {
+    await this.findOne(tenantId, ticketId);
+    await this.prisma.kitchenTicket.update({ where: { id: ticketId }, data: { printedAt: new Date() } });
+    return { id: ticketId, printedAt: new Date() };
+  }
+
+  private async loadTicket(tenantId: string, ticketId: string): Promise<TicketWithItems | null> {
+    const ticket = await this.prisma.kitchenTicket.findUnique({
       where: { id: ticketId },
       include: { table: true, orderItems: { include: { product: true } } },
     });
+    return ticket && ticket.tenantId === tenantId ? ticket : null;
   }
 
   private renderTicketText(ticket: TicketWithItems): string {

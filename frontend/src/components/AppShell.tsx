@@ -33,14 +33,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           <OvenLogo size={28} />
           Hornillas
         </div>
-        {can(user?.role, 'VIEW_DASHBOARD') && (
+        {(can(user?.role, 'VIEW_DASHBOARD') ||
+          can(user?.role, 'TAKE_ORDER') ||
+          can(user?.role, 'HANDLE_PAYMENT') ||
+          can(user?.role, 'MANAGE_CATALOG') ||
+          can(user?.role, 'ENTER_EXPENSE')) && (
           <nav style={{ display: 'flex', gap: 18 }}>
-            <NavLink to="/" style={navLinkStyle} end>
-              Panel
-            </NavLink>
+            {(can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT') || can(user?.role, 'VIEW_DASHBOARD')) && (
+              <NavLink to="/" style={navLinkStyle} end>
+                {can(user?.role, 'VIEW_DASHBOARD') ? 'Panel' : 'Mesas'}
+              </NavLink>
+            )}
             {can(user?.role, 'MANAGE_CATALOG') && (
               <NavLink to="/catalog" style={navLinkStyle}>
                 Catálogo
+              </NavLink>
+            )}
+            {can(user?.role, 'ENTER_EXPENSE') && (
+              <NavLink to="/expenses" style={navLinkStyle}>
+                Gastos
               </NavLink>
             )}
           </nav>

@@ -32,6 +32,15 @@ npm run dev
   until real production data needed to go in. The add and edit forms
   share one `ProductForm` component - same fields, different initial
   values and submit label - rather than duplicating the form.
+- **Gastos** (Cashier/Manager, via a nav link) — record a daily expense
+  (category, amount in pesos, optional description) and see the running
+  list. Same gap as Catálogo had: the backend supported `POST /expenses`
+  since Phase 4, but nothing in the frontend ever exposed it - only the
+  Owner's read-only expense-breakdown report existed, with no way to
+  actually enter one. Note this is gated on `ENTER_EXPENSE`, which the
+  Owner role does *not* have (only Cashier and Manager do, per the
+  original permission matrix) - so the Owner won't see this link, by
+  design, not by omission.
 
 All screen visibility and action buttons are gated by
 `src/auth/permissions.ts`, a UI-only mirror of the backend's role matrix —

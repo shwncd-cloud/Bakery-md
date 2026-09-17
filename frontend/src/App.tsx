@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { can } from './auth/permissions';
 import { CatalogAdminPage } from './pages/CatalogAdminPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ExpensesPage } from './pages/ExpensesPage';
 import { FloorPage } from './pages/FloorPage';
 import { LoginPage } from './pages/LoginPage';
 import { NoAccessPage } from './pages/NoAccessPage';
@@ -24,6 +25,11 @@ function CatalogRoute() {
   return can(user?.role, 'MANAGE_CATALOG') ? <CatalogAdminPage /> : <Navigate to="/" replace />;
 }
 
+function ExpensesRoute() {
+  const { user } = useAuth();
+  return can(user?.role, 'ENTER_EXPENSE') ? <ExpensesPage /> : <Navigate to="/" replace />;
+}
+
 export function App() {
   const { user } = useAuth();
 
@@ -41,6 +47,7 @@ export function App() {
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomeRoute />} />
         <Route path="/catalog" element={<CatalogRoute />} />
+        <Route path="/expenses" element={<ExpensesRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

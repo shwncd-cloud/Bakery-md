@@ -86,6 +86,7 @@ export function listProducts() {
 
 export interface CreateProductInput {
   name: string;
+  category?: string;
   unitPriceCents: number;
   requiresKitchenTicket: boolean;
   trackQuantitySold: boolean;

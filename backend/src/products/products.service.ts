@@ -15,6 +15,7 @@ export class ProductsService {
         unitPriceCents: dto.unitPriceCents,
         requiresKitchenTicket: dto.requiresKitchenTicket ?? false,
         trackQuantitySold: dto.trackQuantitySold ?? false,
+        category: dto.category,
       },
     });
   }

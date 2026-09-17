@@ -15,4 +15,8 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   trackQuantitySold?: boolean;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 }

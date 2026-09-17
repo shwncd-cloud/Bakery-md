@@ -10,6 +10,7 @@ export interface AuthUser {
 export interface Product {
   id: string;
   name: string;
+  category: string | null;
   unitPriceCents: number;
   requiresKitchenTicket: boolean;
   trackQuantitySold: boolean;

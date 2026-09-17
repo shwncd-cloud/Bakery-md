@@ -31,7 +31,14 @@ npm run dev
   `PATCH /products/:id`); the frontend just never had a screen for it
   until real production data needed to go in. The add and edit forms
   share one `ProductForm` component - same fields, different initial
-  values and submit label - rather than duplicating the form.
+  values and submit label - rather than duplicating the form. Products
+  also carry an optional free-text `category` (with a `<datalist>`
+  suggesting categories already in use, so names stay consistent instead
+  of drifting between "Panadería"/"panaderia"/etc.) — the order-taking
+  product picker (`AddItemModal`) groups by this category via
+  `<optgroup>`, with uncategorized items falling into a catch-all "Otros"
+  group at the end, so the picker stays usable as the menu grows past a
+  handful of items.
 - **Gastos** (Cashier/Manager, via a nav link) — record a daily expense
   (category, amount in pesos, optional description) and see the running
   list. Same gap as Catálogo had: the backend supported `POST /expenses`

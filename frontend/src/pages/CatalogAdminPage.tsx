@@ -57,16 +57,19 @@ export function CatalogAdminPage() {
 /// either way, just different initial values and submit label.
 function ProductForm({
   initial,
+  existingCategories,
   submitLabel,
   onCancel,
   onSubmit,
 }: {
   initial?: CreateProductInput;
+  existingCategories: string[];
   submitLabel: string;
   onCancel: () => void;
   onSubmit: (input: CreateProductInput) => Promise<void>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
+  const [category, setCategory] = useState(initial?.category ?? '');
   // The API stores unitPriceCents to avoid float math; COP doesn't
   // practically use centavos, so "pesos entered x 100" round-trips
   // correctly through formatCOP (which divides by 100) everywhere else.
@@ -83,6 +86,7 @@ function ProductForm({
     try {
       await onSubmit({
         name,
+        category: category.trim() || undefined,
         unitPriceCents: Math.round(pricePesos * 100),
         requiresKitchenTicket,
         trackQuantitySold,
@@ -100,6 +104,20 @@ function ProductForm({
       <div className="form-field">
         <label>Nombre</label>
         <input value={name} onChange={(e) => setName(e.target.value)} required />
+      </div>
+      <div className="form-field">
+        <label>Categoría (opcional)</label>
+        <input
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          list="category-options"
+          placeholder="Panadería, Desayunos, Bebidas..."
+        />
+        <datalist id="category-options">
+          {existingCategories.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
       </div>
       <div className="form-field">
         <label>Precio (pesos)</label>
@@ -156,6 +174,7 @@ function ProductsSection({
 }) {
   // 'none' | 'create' | a product id currently being edited
   const [activeForm, setActiveForm] = useState<string>('none');
+  const existingCategories = Array.from(new Set(products.map((p) => p.category).filter((c): c is string => !!c)));
 
   async function handleCreate(input: CreateProductInput) {
     await api.createProduct(input);
@@ -179,7 +198,12 @@ function ProductsSection({
       </div>
 
       {activeForm === 'create' && (
-        <ProductForm submitLabel="Guardar producto" onCancel={() => setActiveForm('none')} onSubmit={handleCreate} />
+        <ProductForm
+          existingCategories={existingCategories}
+          submitLabel="Guardar producto"
+          onCancel={() => setActiveForm('none')}
+          onSubmit={handleCreate}
+        />
       )}
 
       {products.length === 0 ? (
@@ -191,10 +215,12 @@ function ProductsSection({
               key={p.id}
               initial={{
                 name: p.name,
+                category: p.category ?? undefined,
                 unitPriceCents: p.unitPriceCents,
                 requiresKitchenTicket: p.requiresKitchenTicket,
                 trackQuantitySold: p.trackQuantitySold,
               }}
+              existingCategories={existingCategories}
               submitLabel="Guardar cambios"
               onCancel={() => setActiveForm('none')}
               onSubmit={(input) => handleUpdate(p.id, input)}
@@ -204,6 +230,7 @@ function ProductsSection({
               <div style={{ flex: 1 }}>
                 <div>{p.name}</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                  {p.category ? `${p.category} · ` : ''}
                   {p.requiresKitchenTicket ? 'Cocina' : 'Directo'}
                   {p.trackQuantitySold ? ' · Inventario' : ''}
                 </div>

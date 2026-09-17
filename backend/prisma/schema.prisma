@@ -101,6 +101,12 @@ model Product {
   tenantId            String
   tenant              Tenant   @relation(fields: [tenantId], references: [id])
   name                String
+  /// Free-text grouping ("Panadería", "Desayunos", "Bebidas"...) so the
+  /// order-taking product picker can group instead of showing one long
+  /// flat list. Deliberately not a separate normalized entity - a small
+  /// bakery's categories are few and change rarely enough that owner-
+  /// typed free text is simpler than a categories CRUD to maintain.
+  category            String?
   /// Price per unit, in COP cents to avoid floating point money errors.
   unitPriceCents      Int
   requiresKitchenTicket Boolean @default(false)

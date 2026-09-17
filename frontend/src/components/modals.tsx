@@ -49,6 +49,18 @@ export function AddItemModal({
     }
   }
 
+  // Grouped by category so the picker stays usable as the menu grows -
+  // uncategorized products fall under a catch-all group at the end
+  // rather than forcing every product to have one.
+  const groups = new Map<string, Product[]>();
+  for (const p of products) {
+    const key = p.category ?? 'Otros';
+    groups.set(key, [...(groups.get(key) ?? []), p]);
+  }
+  const sortedGroupNames = Array.from(groups.keys()).sort((a, b) =>
+    a === 'Otros' ? 1 : b === 'Otros' ? -1 : a.localeCompare(b),
+  );
+
   return (
     <ModalShell title="Agregar producto" onClose={onClose}>
       {error && <div className="error-banner">{error}</div>}
@@ -56,10 +68,14 @@ export function AddItemModal({
         <div className="form-field">
           <label>Producto</label>
           <select value={productId} onChange={(e) => setProductId(e.target.value)} required>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} - {formatCOP(p.unitPriceCents)}
-              </option>
+            {sortedGroupNames.map((groupName) => (
+              <optgroup key={groupName} label={groupName}>
+                {groups.get(groupName)!.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} - {formatCOP(p.unitPriceCents)}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>

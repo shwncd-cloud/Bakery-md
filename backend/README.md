@@ -171,3 +171,14 @@ dashboard/catalog access unique to Owner. `ASSIGN_ROLES` remains the one
 deliberate exception: staff-account management stays Platform-Admin-only
 (or explicitly delegated) regardless of this change, since "can help on
 the floor" and "can manage who works here" are different questions.
+
+## Product categories (post-launch)
+
+Added `Product.category` (nullable free-text string, migration
+`add_product_category`) so the frontend's order-taking product picker
+can group items instead of showing one flat list as the menu grows.
+Deliberately not a separate normalized Category entity - a small
+bakery's categories are few and change rarely enough that owner-typed
+free text is simpler than a categories CRUD to maintain. `CreateProductDto`/
+`UpdateProductDto` both accept it as optional; existing products without
+one just show as uncategorized.

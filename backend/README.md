@@ -33,6 +33,14 @@ Seed credentials (override via `SEED_ADMIN_NATIONAL_ID` / `SEED_ADMIN_PASSWORD` 
 - Tenant management and staff-account creation, gated so that only a
   Platform Admin can assign roles until a tenant's
   `roleAssignmentDelegated` flag is turned on for its Owner.
+- `PATCH /users/:id` (same `ASSIGN_ROLES` gate) to correct a role
+  assigned by mistake or deactivate an account — added after real-world
+  use surfaced that there was no way to fix a wrong role short of
+  deleting and recreating the user. Refuses to touch Platform Admin
+  accounts either as the target or the requested role. Verified live:
+  created a user as the wrong role, corrected it, confirmed promoting to
+  Platform Admin is rejected (400), confirmed a Waiter is blocked (403),
+  and confirmed deactivation works.
 
 ## Phase 2
 

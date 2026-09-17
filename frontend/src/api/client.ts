@@ -84,9 +84,28 @@ export function listProducts() {
   return request<Product[]>('GET', '/products');
 }
 
+export interface CreateProductInput {
+  name: string;
+  unitPriceCents: number;
+  requiresKitchenTicket: boolean;
+  trackQuantitySold: boolean;
+}
+
+export function createProduct(input: CreateProductInput) {
+  return request<Product>('POST', '/products', input);
+}
+
+export function deactivateProduct(productId: string) {
+  return request<Product>('DELETE', `/products/${productId}`);
+}
+
 // ---- Tables ----
 export function listTables() {
   return request<TableSummary[]>('GET', '/tables');
+}
+
+export function createTable(label: string) {
+  return request<TableSummary>('POST', '/tables', { label });
 }
 
 export function getTableItems(tableId: string) {

@@ -24,6 +24,12 @@ npm run dev
 - **Dashboard** (Owner/Manager) — period selector (day through year),
   sales/expenses/net, product and waiter breakdowns, expense-by-category,
   and a button to trigger the monthly summary email on demand.
+- **Catálogo** (Owner/Manager, via a nav link next to Panel) — add
+  products (price entered in plain pesos, converted to `unitPriceCents`
+  before it hits the API) and tables, and deactivate products no longer
+  sold. The backend has supported this since Phase 2
+  (`MANAGE_CATALOG`); the frontend just never had a screen for it until
+  real production data needed to go in.
 
 All screen visibility and action buttons are gated by
 `src/auth/permissions.ts`, a UI-only mirror of the backend's role matrix —

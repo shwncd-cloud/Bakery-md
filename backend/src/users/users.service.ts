@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { CurrentUserPayload } from '../common/current-user.decorator';
@@ -19,6 +19,10 @@ export class UsersService {
     }
     if (dto.role === Role.PLATFORM_ADMIN) {
       throw new BadRequestException('Platform Admin accounts cannot be created through this endpoint');
+    }
+    const existing = await this.prisma.user.findUnique({ where: { nationalId: dto.nationalId } });
+    if (existing) {
+      throw new ConflictException('This national ID is already registered to another account');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);

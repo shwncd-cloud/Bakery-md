@@ -24,12 +24,14 @@ npm run dev
 - **Dashboard** (Owner/Manager) — period selector (day through year),
   sales/expenses/net, product and waiter breakdowns, expense-by-category,
   and a button to trigger the monthly summary email on demand.
-- **Catálogo** (Owner/Manager, via a nav link next to Panel) — add
-  products (price entered in plain pesos, converted to `unitPriceCents`
-  before it hits the API) and tables, and deactivate products no longer
-  sold. The backend has supported this since Phase 2
-  (`MANAGE_CATALOG`); the frontend just never had a screen for it until
-  real production data needed to go in.
+- **Catálogo** (Owner/Manager, via a nav link next to Panel) — add,
+  edit, and deactivate products (price entered in plain pesos, converted
+  to `unitPriceCents` before it hits the API), and add tables. The
+  backend has supported this since Phase 2 (`MANAGE_CATALOG`, including
+  `PATCH /products/:id`); the frontend just never had a screen for it
+  until real production data needed to go in. The add and edit forms
+  share one `ProductForm` component - same fields, different initial
+  values and submit label - rather than duplicating the form.
 
 All screen visibility and action buttons are gated by
 `src/auth/permissions.ts`, a UI-only mirror of the backend's role matrix —

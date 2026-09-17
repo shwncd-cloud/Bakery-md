@@ -95,6 +95,10 @@ export function createProduct(input: CreateProductInput) {
   return request<Product>('POST', '/products', input);
 }
 
+export function updateProduct(productId: string, input: CreateProductInput) {
+  return request<Product>('PATCH', `/products/${productId}`, input);
+}
+
 export function deactivateProduct(productId: string) {
   return request<Product>('DELETE', `/products/${productId}`);
 }

@@ -44,6 +44,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {can(user?.role, 'VIEW_DASHBOARD') ? 'Panel' : 'Mesas'}
               </NavLink>
             )}
+            {/* Only shown when the floor isn't already "/" for this role
+                (i.e. someone like the Owner who also has VIEW_DASHBOARD) -
+                otherwise the link above already goes to the floor. */}
+            {can(user?.role, 'VIEW_DASHBOARD') && (can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT')) && (
+              <NavLink to="/floor" style={navLinkStyle}>
+                Mesas
+              </NavLink>
+            )}
             {can(user?.role, 'MANAGE_CATALOG') && (
               <NavLink to="/catalog" style={navLinkStyle}>
                 Catálogo

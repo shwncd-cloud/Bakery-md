@@ -16,7 +16,20 @@ export type Permission =
 
 const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   PLATFORM_ADMIN: [],
-  OWNER: ['VIEW_DASHBOARD', 'MANAGE_CATALOG'],
+  // Same exception as the backend: Owner gets every operational
+  // permission (can cover the floor when short-staffed) except
+  // ASSIGN_ROLES, which is a separate, deliberate staff-management
+  // decision.
+  OWNER: [
+    'VIEW_DASHBOARD',
+    'MANAGE_CATALOG',
+    'TAKE_ORDER',
+    'EDIT_PRE_KITCHEN_ITEM',
+    'SEND_TO_KITCHEN',
+    'APPLY_DISCOUNT',
+    'HANDLE_PAYMENT',
+    'ENTER_EXPENSE',
+  ],
   MANAGER: ['VIEW_DASHBOARD', 'ENTER_EXPENSE', 'MANAGE_CATALOG'],
   CASHIER: ['TAKE_ORDER', 'EDIT_PRE_KITCHEN_ITEM', 'SEND_TO_KITCHEN', 'APPLY_DISCOUNT', 'HANDLE_PAYMENT', 'ENTER_EXPENSE'],
   WAITER: ['TAKE_ORDER', 'EDIT_PRE_KITCHEN_ITEM', 'SEND_TO_KITCHEN'],

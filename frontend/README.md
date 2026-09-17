@@ -69,6 +69,20 @@ afterward). Two real bugs were found and fixed this way: `GET
 the `discounts` relation, so an applied discount was invisible in the UI
 despite existing correctly in the database.
 
+## Owner permissions expanded (post-launch)
+
+Owner now mirrors Cashier's full operational permission set (order
+taking, kitchen, discounts, payment, expenses) in addition to Panel and
+Catálogo - see the backend README for why. Routing changed to match:
+`/` now prioritizes the Dashboard over the Floor when a role has both
+(previously Floor always won), and a separate `/floor` route plus a
+"Mesas" nav link exist specifically for roles - like Owner - that need
+an explicit way to reach the floor rather than landing there by default.
+Verified live: Owner still lands on the Dashboard on login, all four nav
+links (Panel, Mesas, Catálogo, Gastos) appear, and taking a real order
+from the floor as the Owner works correctly (add item, discount, send to
+kitchen, payment checkbox all present).
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

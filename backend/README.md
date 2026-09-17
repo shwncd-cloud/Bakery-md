@@ -158,3 +158,16 @@ and refuses to boot in production with either the default or a missing
 secret. CORS is also restrictable via `CORS_ORIGIN` (defaults to `*`,
 which is fine for dev but should be set to the deployed frontend's exact
 URL in production).
+
+## Owner permissions expanded (post-launch)
+
+Real usage surfaced that the Owner role, as originally scoped
+(`VIEW_DASHBOARD` + `MANAGE_CATALOG` only), couldn't help out
+operationally - a real small-bakery owner routinely covers the floor
+when short-staffed. Owner now also has `TAKE_ORDER`,
+`EDIT_PRE_KITCHEN_ITEM`, `SEND_TO_KITCHEN`, `APPLY_DISCOUNT`,
+`HANDLE_PAYMENT`, and `ENTER_EXPENSE` - everything Cashier has, plus the
+dashboard/catalog access unique to Owner. `ASSIGN_ROLES` remains the one
+deliberate exception: staff-account management stays Platform-Admin-only
+(or explicitly delegated) regardless of this change, since "can help on
+the floor" and "can manage who works here" are different questions.

@@ -23,7 +23,21 @@ export enum Permission {
 /// (see PermissionsGuard). Everyone else's permissions are fixed.
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   PLATFORM_ADMIN: [Permission.ASSIGN_ROLES, Permission.MANAGE_TENANT_USERS, Permission.MANAGE_CATALOG],
-  OWNER: [Permission.VIEW_DASHBOARD, Permission.MANAGE_CATALOG],
+  // Owner gets every operational permission too - a small bakery's owner
+  // routinely covers the floor when short-staffed. ASSIGN_ROLES is the
+  // deliberate exception: staff account management stays Platform-Admin-
+  // only unless explicitly delegated (see PermissionsGuard), which is a
+  // separate decision from "can help take orders."
+  OWNER: [
+    Permission.VIEW_DASHBOARD,
+    Permission.MANAGE_CATALOG,
+    Permission.TAKE_ORDER,
+    Permission.EDIT_PRE_KITCHEN_ITEM,
+    Permission.SEND_TO_KITCHEN,
+    Permission.APPLY_DISCOUNT,
+    Permission.HANDLE_PAYMENT,
+    Permission.ENTER_EXPENSE,
+  ],
   MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE, Permission.MANAGE_CATALOG],
   CASHIER: [
     Permission.TAKE_ORDER,

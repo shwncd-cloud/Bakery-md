@@ -11,13 +11,25 @@ import { NoAccessPage } from './pages/NoAccessPage';
 
 function HomeRoute() {
   const { user } = useAuth();
-  if (can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT')) {
-    return <FloorPage />;
-  }
+  // Dashboard takes priority when both apply (e.g. Owner, who can also
+  // help on the floor) - the dashboard is still "home" for that role,
+  // the floor is reached via the separate /floor route/nav link.
   if (can(user?.role, 'VIEW_DASHBOARD')) {
     return <DashboardPage />;
   }
+  if (can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT')) {
+    return <FloorPage />;
+  }
   return <NoAccessPage />;
+}
+
+function FloorRoute() {
+  const { user } = useAuth();
+  return can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT') ? (
+    <FloorPage />
+  ) : (
+    <Navigate to="/" replace />
+  );
 }
 
 function CatalogRoute() {
@@ -46,6 +58,7 @@ export function App() {
       <Routes>
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/" element={<HomeRoute />} />
+        <Route path="/floor" element={<FloorRoute />} />
         <Route path="/catalog" element={<CatalogRoute />} />
         <Route path="/expenses" element={<ExpensesRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />

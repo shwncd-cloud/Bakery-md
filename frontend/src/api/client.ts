@@ -208,8 +208,8 @@ export async function createPayment(
 }
 
 // ---- Expenses ----
-export function createExpense(category: string, amountCents: number, description?: string) {
-  return request<Expense>('POST', '/expenses', { category, amountCents, description });
+export function createExpense(provider: string, amountCents: number, description?: string, voucherNumber?: string) {
+  return request<Expense>('POST', '/expenses', { provider, amountCents, description, voucherNumber });
 }
 
 export function listExpenses() {

@@ -100,6 +100,21 @@ modal, rather than repeating the literal union in each. Verified live:
 all three options render, and a real payment made with Nequi is
 recorded correctly.
 
+## Expenses: provider + voucher number (post-launch)
+
+The Gastos form's "Proveedor" field (previously "Categoría") now
+reflects what it was actually always used for - who the money went to -
+and a new optional "Número de comprobante" field records the
+receipt/voucher number the supplier hands over, for matching an expense
+back to its physical proof later. `Expense`/`ExpenseBreakdownRow` types,
+`api/client.ts`, `ExpensesPage`, and the Dashboard's "Gastos por
+proveedor" card all updated to match the backend rename - see the
+backend README for the migration details. Verified live: added a real
+expense with both a provider name and a voucher number, confirmed it
+displays correctly in the Gastos list alongside pre-existing rows
+(rename preserved their data), and confirmed the Dashboard's expense
+card still totals correctly under the new field name.
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

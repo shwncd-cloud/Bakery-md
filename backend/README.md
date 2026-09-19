@@ -196,3 +196,19 @@ none exist - verified against the local database, which genuinely had
 one historical `TRANSFER` payment from earlier testing, and it came out
 the other side as `DAVIPLATA` with everything else about that row
 untouched.
+
+## Expenses: provider + voucher number (post-launch)
+
+Renamed `Expense.category` to `Expense.provider` and added an optional
+`voucherNumber` field. Real usage showed the free-text "category" field
+was actually always being used to record who the money went to (a
+supplier name), not a spending category - and the bakery keeps the
+paper receipt/voucher a supplier hands over at time of payment, so
+having its number on file matters for reconciling an expense back to
+that physical proof later. Migration `expense_provider_and_voucher`
+does a plain column rename (`category` → `provider`, no enum involved)
+plus an additive nullable column - verified against the local database,
+which had two real expense rows, and both came out the other side with
+their values intact under the new column name. `CreateExpenseDto`,
+`ExpensesService`, and both report paths (`ReportsService.getExpenseBreakdown`,
+`MonthlySummaryService`) all use `provider`/`voucherNumber` now.

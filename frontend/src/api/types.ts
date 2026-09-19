@@ -64,7 +64,8 @@ export interface Payment {
 
 export interface Expense {
   id: string;
-  category: string;
+  provider: string;
+  voucherNumber: string | null;
   amountCents: number;
   description: string | null;
   createdAt: string;
@@ -96,6 +97,6 @@ export interface WaiterPerformanceRow {
 }
 
 export interface ExpenseBreakdownRow {
-  category: string;
+  provider: string;
   totalCents: number;
 }

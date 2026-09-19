@@ -236,7 +236,13 @@ model Expense {
   id              String   @id @default(uuid())
   tenantId        String
   tenant          Tenant   @relation(fields: [tenantId], references: [id])
-  category        String
+  /// Who the money went to (e.g. "Molino El Trigal") - renamed from a
+  /// generic expense category after real use showed tracking the
+  /// supplier mattered more than a category label for this business.
+  provider        String
+  /// The receipt/voucher number the supplier gives at time of payment -
+  /// for matching an expense back to its physical proof later.
+  voucherNumber   String?
   amountCents     Int
   description     String?
   enteredByUserId String

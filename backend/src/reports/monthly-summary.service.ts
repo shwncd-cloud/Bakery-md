@@ -71,7 +71,7 @@ export class MonthlySummaryService {
     tenantName: string,
     summary: { totalSalesCents: number; totalExpensesCents: number; netCents: number },
     products: { name: string; unitsSold: number; revenueCents: number }[],
-    expenses: { category: string; totalCents: number }[],
+    expenses: { provider: string; totalCents: number }[],
     start: Date,
     end: Date,
   ): string {
@@ -86,8 +86,8 @@ export class MonthlySummaryService {
       'Top products:',
       ...products.slice(0, 10).map((p) => `  ${p.name}: ${p.unitsSold} units, ${formatCOP(p.revenueCents)}`),
       '',
-      'Expenses by category:',
-      ...expenses.map((e) => `  ${e.category}: ${formatCOP(e.totalCents)}`),
+      'Expenses by provider:',
+      ...expenses.map((e) => `  ${e.provider}: ${formatCOP(e.totalCents)}`),
     ];
     return lines.join('\n');
   }

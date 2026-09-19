@@ -2,7 +2,7 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateExpenseDto {
   @IsString()
-  category!: string;
+  provider!: string;
 
   @IsInt()
   @Min(1)
@@ -11,4 +11,8 @@ export class CreateExpenseDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  voucherNumber?: string;
 }

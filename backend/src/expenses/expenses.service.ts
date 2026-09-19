@@ -11,7 +11,8 @@ export class ExpensesService {
     return this.prisma.expense.create({
       data: {
         tenantId,
-        category: dto.category,
+        provider: dto.provider,
+        voucherNumber: dto.voucherNumber,
         amountCents: dto.amountCents,
         description: dto.description,
         enteredByUserId,

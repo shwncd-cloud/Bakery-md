@@ -86,13 +86,13 @@ export class ReportsService {
   async getExpenseBreakdown(tenantId: string, period: ReportPeriod, referenceDate?: Date) {
     const { start, end } = getPeriodRange(period, referenceDate);
     const grouped = await this.prisma.expense.groupBy({
-      by: ['category'],
+      by: ['provider'],
       where: { tenantId, createdAt: { gte: start, lt: end } },
       _sum: { amountCents: true },
     });
 
     return grouped
-      .map((row) => ({ category: row.category, totalCents: row._sum.amountCents ?? 0 }))
+      .map((row) => ({ provider: row.provider, totalCents: row._sum.amountCents ?? 0 }))
       .sort((a, b) => b.totalCents - a.totalCents);
   }
 }

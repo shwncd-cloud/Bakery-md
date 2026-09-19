@@ -15,7 +15,8 @@ export function ExpensesPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const [category, setCategory] = useState('');
+  const [provider, setProvider] = useState('');
+  const [voucherNumber, setVoucherNumber] = useState('');
   const [amountPesos, setAmountPesos] = useState<number>(0);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -43,8 +44,9 @@ export function ExpensesPage() {
     try {
       // Same convention as product prices: enter plain pesos, store as
       // the smallest-unit integer the API expects.
-      await api.createExpense(category, Math.round(amountPesos * 100), description || undefined);
-      setCategory('');
+      await api.createExpense(provider, Math.round(amountPesos * 100), description || undefined, voucherNumber || undefined);
+      setProvider('');
+      setVoucherNumber('');
       setAmountPesos(0);
       setDescription('');
       setShowForm(false);
@@ -73,13 +75,17 @@ export function ExpensesPage() {
           <form onSubmit={handleSubmit} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--color-tan)' }}>
             {formError && <div className="error-banner">{formError}</div>}
             <div className="form-field">
-              <label>Categoría</label>
+              <label>Proveedor</label>
               <input
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="Harina, servicios, mantenimiento..."
+                value={provider}
+                onChange={(e) => setProvider(e.target.value)}
+                placeholder="Molino El Trigal, EPM, ..."
                 required
               />
+            </div>
+            <div className="form-field">
+              <label>Número de comprobante (opcional)</label>
+              <input value={voucherNumber} onChange={(e) => setVoucherNumber(e.target.value)} placeholder="0001234" />
             </div>
             <div className="form-field">
               <label>Monto (pesos)</label>
@@ -95,7 +101,7 @@ export function ExpensesPage() {
               <label>Descripción (opcional)</label>
               <input value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={submitting || !category || amountPesos <= 0}>
+            <button type="submit" className="btn btn-primary" disabled={submitting || !provider || amountPesos <= 0}>
               {submitting ? 'Guardando...' : 'Guardar gasto'}
             </button>
           </form>
@@ -109,7 +115,12 @@ export function ExpensesPage() {
           expenses.map((e) => (
             <div className="list-row" key={e.id}>
               <div style={{ flex: 1 }}>
-                <div>{e.category}</div>
+                <div>
+                  {e.provider}
+                  {e.voucherNumber && (
+                    <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> · Comp. {e.voucherNumber}</span>
+                  )}
+                </div>
                 {e.description && (
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{e.description}</div>
                 )}

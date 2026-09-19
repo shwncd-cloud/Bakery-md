@@ -126,13 +126,13 @@ export function DashboardPage() {
           </div>
 
           <div className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ marginBottom: 10 }}>Gastos por categoría</h3>
+            <h3 style={{ marginBottom: 10 }}>Gastos por proveedor</h3>
             {expenses.length === 0 ? (
               <div className="empty-state">Sin gastos en este período.</div>
             ) : (
               expenses.map((e) => (
-                <div className="list-row" key={e.category}>
-                  <span>{e.category}</span>
+                <div className="list-row" key={e.provider}>
+                  <span>{e.provider}</span>
                   <strong>{formatCOP(e.totalCents)}</strong>
                 </div>
               ))

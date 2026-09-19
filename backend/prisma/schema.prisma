@@ -154,6 +154,9 @@ model OrderItem {
   quantity        Int             @default(1)
   /// Price snapshot at order time, so later price changes don't rewrite history.
   unitPriceCents  Int
+  /// Free-text note from whoever took the order ("sin cebolla", "para
+  /// llevar") - shows up on the kitchen ticket alongside the item.
+  note            String?
   status          OrderItemStatus @default(ORDERED)
   takenByUserId   String
   takenByUser     User            @relation("OrderItemTakenBy", fields: [takenByUserId], references: [id])

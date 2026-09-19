@@ -30,6 +30,7 @@ export interface OrderItem {
   productId: string;
   quantity: number;
   unitPriceCents: number;
+  note: string | null;
   status: OrderItemStatus;
   takenByUserId: string;
   kitchenTicketId: string | null;

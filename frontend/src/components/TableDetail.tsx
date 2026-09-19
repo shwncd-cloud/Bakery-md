@@ -75,9 +75,9 @@ export function TableDetail({
   const selectedItems = items.filter((i) => selectedForPayment.has(i.id));
   const selectedTotal = selectedItems.reduce((sum, i) => sum + lineTotalCents(i), 0);
 
-  async function handleAdd(product: Product, quantity: number) {
+  async function handleAdd(product: Product, quantity: number, note?: string) {
     if (!user) return;
-    const created = await api.createOrderItem(tableId, product, quantity, user.id);
+    const created = await api.createOrderItem(tableId, product, quantity, user.id, note);
     setItems((prev) => [...prev, created]);
   }
 
@@ -169,6 +169,9 @@ export function TableDetail({
                   {item.quantity}x {item.product.name}
                   {item.pendingSync && <span className="badge" style={{ marginLeft: 8 }}>pendiente de enviar</span>}
                 </div>
+                {item.note && (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Nota: {item.note}</div>
+                )}
                 {item.discounts && item.discounts.length > 0 && (
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                     Descuento: {item.discounts[0].reason}

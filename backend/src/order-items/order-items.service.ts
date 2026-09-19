@@ -28,6 +28,7 @@ export class OrderItemsService {
         productId: dto.productId,
         quantity: dto.quantity,
         unitPriceCents: product.unitPriceCents,
+        note: dto.note,
         takenByUserId,
         shift: getCurrentShift(),
       },

@@ -136,8 +136,9 @@ export async function createOrderItem(
   product: Product,
   quantity: number,
   takenByUserId: string,
+  note?: string,
 ): Promise<OptimisticOrderItem> {
-  const body = { tableId, productId: product.id, quantity };
+  const body = { tableId, productId: product.id, quantity, note: note || undefined };
   try {
     return await request<OrderItem>('POST', '/order-items', body);
   } catch (err) {
@@ -149,6 +150,7 @@ export async function createOrderItem(
       productId: product.id,
       quantity,
       unitPriceCents: product.unitPriceCents,
+      note: note || null,
       status: 'ORDERED',
       takenByUserId,
       kitchenTicketId: null,

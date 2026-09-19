@@ -26,21 +26,22 @@ export function AddItemModal({
 }: {
   products: Product[];
   onClose: () => void;
-  onAdd: (product: Product, quantity: number) => Promise<void>;
+  onAdd: (product: Product, quantity: number, note?: string) => Promise<void>;
 }) {
-  const [productId, setProductId] = useState(products[0]?.id ?? '');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [search, setSearch] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const product = products.find((p) => p.id === productId);
-    if (!product) return;
+    if (!selectedProduct) return;
     setSubmitting(true);
     setError(null);
     try {
-      await onAdd(product, quantity);
+      await onAdd(selectedProduct, quantity, note || undefined);
       onClose();
     } catch (err) {
       setError(errorMessage(err));
@@ -49,17 +50,13 @@ export function AddItemModal({
     }
   }
 
-  // Grouped by category so the picker stays usable as the menu grows -
-  // uncategorized products fall under a catch-all group at the end
-  // rather than forcing every product to have one.
-  const groups = new Map<string, Product[]>();
-  for (const p of products) {
-    const key = p.category ?? 'Otros';
-    groups.set(key, [...(groups.get(key) ?? []), p]);
-  }
-  const sortedGroupNames = Array.from(groups.keys()).sort((a, b) =>
-    a === 'Otros' ? 1 : b === 'Otros' ? -1 : a.localeCompare(b),
-  );
+  // Search-as-you-type instead of a long category-grouped dropdown - real
+  // usage showed hunting through the list was slowing down order-taking.
+  // Matches on any part of the name so "pan" finds "Pan francés" too.
+  const normalizedSearch = search.trim().toLowerCase();
+  const matches = normalizedSearch
+    ? products.filter((p) => p.name.toLowerCase().includes(normalizedSearch)).slice(0, 8)
+    : [];
 
   return (
     <ModalShell title="Agregar producto" onClose={onClose}>
@@ -67,27 +64,68 @@ export function AddItemModal({
       <form onSubmit={handleSubmit}>
         <div className="form-field">
           <label>Producto</label>
-          <select value={productId} onChange={(e) => setProductId(e.target.value)} required>
-            {sortedGroupNames.map((groupName) => (
-              <optgroup key={groupName} label={groupName}>
-                {groups.get(groupName)!.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} - {formatCOP(p.unitPriceCents)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+          {selectedProduct ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                {selectedProduct.name} - {formatCOP(selectedProduct.unitPriceCents)}
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSelectedProduct(null);
+                  setSearch('');
+                }}
+              >
+                Cambiar
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Escribe el nombre del producto..."
+                autoFocus
+              />
+              {normalizedSearch && (
+                <div className="search-results">
+                  {matches.length === 0 ? (
+                    <div className="empty-state">Sin resultados.</div>
+                  ) : (
+                    matches.map((p) => (
+                      <button
+                        type="button"
+                        key={p.id}
+                        className="search-result-row"
+                        onClick={() => {
+                          setSelectedProduct(p);
+                          setSearch('');
+                        }}
+                      >
+                        <span>{p.name}</span>
+                        <span>{formatCOP(p.unitPriceCents)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </div>
         <div className="form-field">
           <label>Cantidad</label>
           <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} required />
         </div>
+        <div className="form-field">
+          <label>Nota (opcional)</label>
+          <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Sin cebolla, para llevar, ..." />
+        </div>
         <div className="modal-actions">
           <button type="button" className="btn btn-secondary" onClick={onClose}>
             Cancelar
           </button>
-          <button type="submit" className="btn btn-primary" disabled={submitting || !productId}>
+          <button type="submit" className="btn btn-primary" disabled={submitting || !selectedProduct}>
             {submitting ? 'Agregando...' : 'Agregar'}
           </button>
         </div>

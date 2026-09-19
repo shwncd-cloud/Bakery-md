@@ -140,6 +140,22 @@ form, and a product name that isn't in the catalog at all ("Torta de
 tres leches personalizada") saves and displays correctly alongside an
 existing catalog-linked order.
 
+## Order item notes + faster order-taking search (post-launch)
+
+Real usage surfaced that `AddItemModal`'s category-grouped dropdown was
+slowing down order-taking - scanning through a long `<select>` under
+time pressure doesn't scale as the menu grows. Replaced it with
+search-as-you-type: an autofocused text input filters the product list
+by substring match on name (case-insensitive, up to 8 results shown),
+and picking a result replaces the input with a "Producto - precio" chip
+plus a "Cambiar" button to search again. Also added an optional "Nota"
+field (e.g. "sin cebolla", "para llevar") that shows up under the item
+in the table's order list and flows through to the kitchen ticket - see
+the backend README. Verified live: typing "jugo" correctly surfaced
+only the matching product, and an item added with a note displayed
+correctly both in the table view and (via a direct API check) in the
+rendered kitchen ticket text.
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

@@ -249,3 +249,19 @@ any existing rows, then drops the old column and foreign key -
 verified against the local database, which had a real custom order
 row, and it came out the other side with the same product name
 preserved as plain text.
+
+## Order item notes + faster order-taking search (post-launch)
+
+Real usage surfaced that hunting through the category-grouped product
+dropdown was slowing down order-taking. Rather than change how products
+are browsed everywhere, added `OrderItem.note` (nullable free text) so
+this became primarily a frontend change - see the frontend README for
+the search UI. `note` flows through `CreateOrderItemDto` into
+`OrderItemsService.create()`, and `KitchenTicketsService.renderTicketText()`
+appends it after the item name (`1x Desayuno con Huevos - Sin cebolla,
+extra caliente`) so instructions like "sin cebolla" or "para llevar"
+actually reach the kitchen ticket, not just the POS screen. Migration
+`order_item_note` is a single additive nullable column. Verified live:
+created an order item with a note through the API, confirmed it's
+stored and returned correctly, sent it to the kitchen, and confirmed
+the note appears in the rendered ticket text.

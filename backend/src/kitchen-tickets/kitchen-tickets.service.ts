@@ -95,7 +95,7 @@ export class KitchenTicketsService {
       `Table: ${ticket.table.label}`,
       new Date().toLocaleString('es-CO'),
       '------------------------',
-      ...ticket.orderItems.map((item) => `${item.quantity}x ${item.product.name}`),
+      ...ticket.orderItems.map((item) => `${item.quantity}x ${item.product.name}${item.note ? ` - ${item.note}` : ''}`),
       '------------------------',
     ];
     return lines.join('\n');

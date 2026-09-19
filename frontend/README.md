@@ -120,13 +120,25 @@ card still totals correctly under the new field name.
 New "Pedidos especiales" page/nav link (`CustomOrdersPage`, gated by the
 new `MANAGE_CUSTOM_ORDERS` permission) for made-to-order requests taken
 ahead of a delivery date - a special cake, a wholesale quantity - rather
-than served immediately from a table. Form captures product (grouped by
-category, same picker convention as `AddItemModal`), quantity,
+than served immediately from a table. Form captures product, quantity,
 description, deposit, and delivery date; the list shows both the date
 the order was placed and the delivery date, and a checkbox toggles
 "Entregado" once fulfilled. Verified live: created a custom order with a
 description and deposit, confirmed it displays correctly, and confirmed
 toggling delivered updates immediately.
+
+## Custom orders: free-text product (post-launch)
+
+The "Producto" field on a custom order is now a plain text input
+(with a `datalist` suggesting existing catalog product names for
+convenience) instead of a dropdown limited to the catalog - a one-off
+custom cake often isn't an existing menu item, and forcing a pick from
+the catalog meant choosing the closest stand-in rather than describing
+what was actually ordered. Matches the backend's `productName` rename -
+see the backend README. Verified live: no `<select>` remains on the
+form, and a product name that isn't in the catalog at all ("Torta de
+tres leches personalizada") saves and displays correctly alongside an
+existing catalog-linked order.
 
 ## Docker
 

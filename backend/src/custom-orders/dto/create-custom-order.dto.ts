@@ -1,8 +1,8 @@
-import { IsDateString, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateCustomOrderDto {
-  @IsUUID()
-  productId!: string;
+  @IsString()
+  productName!: string;
 
   @IsInt()
   @Min(1)

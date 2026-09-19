@@ -236,3 +236,16 @@ money-handling action like entering an expense. `POST /custom-orders`,
 Verified live: created a custom order with a description and deposit,
 confirmed it renders correctly in the list, and confirmed toggling
 "Entregado" updates immediately and persists.
+
+## Custom orders: free-text product (post-launch)
+
+Changed `CustomOrder.productId` (a required catalog `Product` FK) to a
+free-text `productName` field. A one-off custom cake is often not, and
+doesn't need to be, an existing menu item - requiring it to match the
+catalog forced picking the closest existing product as a stand-in,
+which was the wrong model. Migration `custom_order_free_text_product`
+adds the new column, backfills it from the linked product's name for
+any existing rows, then drops the old column and foreign key -
+verified against the local database, which had a real custom order
+row, and it came out the other side with the same product name
+preserved as plain text.

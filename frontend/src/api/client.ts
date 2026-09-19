@@ -219,7 +219,7 @@ export function listExpenses() {
 
 // ---- Custom orders ----
 export interface CreateCustomOrderInput {
-  productId: string;
+  productName: string;
   quantity: number;
   description?: string;
   depositCents?: number;

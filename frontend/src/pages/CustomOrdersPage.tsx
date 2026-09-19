@@ -20,7 +20,7 @@ export function CustomOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const [productId, setProductId] = useState('');
+  const [productName, setProductName] = useState('');
   const [quantity, setQuantity] = useState<number>(1);
   const [description, setDescription] = useState('');
   const [depositPesos, setDepositPesos] = useState<number>(0);
@@ -34,7 +34,6 @@ export function CustomOrdersPage() {
       const [o, p] = await Promise.all([api.listCustomOrders(), api.listProducts()]);
       setOrders(o);
       setProducts(p);
-      setProductId((current) => current || p[0]?.id || '');
     } catch {
       setError('No se pudieron cargar los pedidos especiales');
     } finally {
@@ -52,7 +51,7 @@ export function CustomOrdersPage() {
     setFormError(null);
     try {
       await api.createCustomOrder({
-        productId,
+        productName,
         quantity,
         description: description || undefined,
         // Same convention as product prices and expenses: enter plain
@@ -60,6 +59,7 @@ export function CustomOrdersPage() {
         depositCents: Math.round(depositPesos * 100),
         deliveryDate: new Date(deliveryDate).toISOString(),
       });
+      setProductName('');
       setQuantity(1);
       setDescription('');
       setDepositPesos(0);
@@ -82,16 +82,6 @@ export function CustomOrdersPage() {
     }
   }
 
-  // Same grouping convention as the order-taking product picker.
-  const groups = new Map<string, Product[]>();
-  for (const p of products) {
-    const key = p.category ?? 'Otros';
-    groups.set(key, [...(groups.get(key) ?? []), p]);
-  }
-  const sortedGroupNames = Array.from(groups.keys()).sort((a, b) =>
-    a === 'Otros' ? 1 : b === 'Otros' ? -1 : a.localeCompare(b),
-  );
-
   return (
     <div className="page">
       <h2 style={{ marginBottom: 16 }}>Pedidos especiales</h2>
@@ -110,17 +100,18 @@ export function CustomOrdersPage() {
             {formError && <div className="error-banner">{formError}</div>}
             <div className="form-field">
               <label>Producto</label>
-              <select value={productId} onChange={(e) => setProductId(e.target.value)} required>
-                {sortedGroupNames.map((groupName) => (
-                  <optgroup key={groupName} label={groupName}>
-                    {groups.get(groupName)!.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} - {formatCOP(p.unitPriceCents)}
-                      </option>
-                    ))}
-                  </optgroup>
+              <input
+                value={productName}
+                onChange={(e) => setProductName(e.target.value)}
+                list="product-name-options"
+                placeholder="Torta de cumpleaños, Pan francés x20, ..."
+                required
+              />
+              <datalist id="product-name-options">
+                {products.map((p) => (
+                  <option key={p.id} value={p.name} />
                 ))}
-              </select>
+              </datalist>
             </div>
             <div className="form-field">
               <label>Cantidad</label>
@@ -143,7 +134,7 @@ export function CustomOrdersPage() {
               <label>Fecha de entrega</label>
               <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} required />
             </div>
-            <button type="submit" className="btn btn-primary" disabled={submitting || !productId || !deliveryDate}>
+            <button type="submit" className="btn btn-primary" disabled={submitting || !productName || !deliveryDate}>
               {submitting ? 'Guardando...' : 'Guardar pedido'}
             </button>
           </form>
@@ -158,7 +149,7 @@ export function CustomOrdersPage() {
             <div className="list-row" key={o.id}>
               <div style={{ flex: 1 }}>
                 <div>
-                  {o.product.name} × {o.quantity}
+                  {o.productName} × {o.quantity}
                   {o.fulfilled && (
                     <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> · Entregado</span>
                   )}

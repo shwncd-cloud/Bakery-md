@@ -103,8 +103,7 @@ export interface ExpenseBreakdownRow {
 
 export interface CustomOrder {
   id: string;
-  productId: string;
-  product: Product;
+  productName: string;
   quantity: number;
   description: string | null;
   depositCents: number;

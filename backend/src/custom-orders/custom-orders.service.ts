@@ -11,21 +11,19 @@ export class CustomOrdersService {
     return this.prisma.customOrder.create({
       data: {
         tenantId,
-        productId: dto.productId,
+        productName: dto.productName,
         quantity: dto.quantity,
         description: dto.description,
         depositCents: dto.depositCents ?? 0,
         deliveryDate: new Date(dto.deliveryDate),
         takenByUserId,
       },
-      include: { product: true },
     });
   }
 
   findAllForTenant(tenantId: string) {
     return this.prisma.customOrder.findMany({
       where: { tenantId },
-      include: { product: true },
       orderBy: { deliveryDate: 'asc' },
     });
   }
@@ -38,7 +36,6 @@ export class CustomOrdersService {
     return this.prisma.customOrder.update({
       where: { id },
       data: { fulfilled: dto.fulfilled },
-      include: { product: true },
     });
   }
 }

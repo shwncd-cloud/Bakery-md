@@ -1,0 +1,13 @@
+{
+  "name": "bakery-md-print-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Runs at the bakery. Polls the cloud backend for kitchen tickets and prints them to the local Wi-Fi printer.",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

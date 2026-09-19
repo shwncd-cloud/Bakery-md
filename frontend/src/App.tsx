@@ -3,6 +3,7 @@ import { AppShell } from './components/AppShell';
 import { useAuth } from './auth/AuthContext';
 import { can } from './auth/permissions';
 import { CatalogAdminPage } from './pages/CatalogAdminPage';
+import { CustomOrdersPage } from './pages/CustomOrdersPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { FloorPage } from './pages/FloorPage';
@@ -42,6 +43,11 @@ function ExpensesRoute() {
   return can(user?.role, 'ENTER_EXPENSE') ? <ExpensesPage /> : <Navigate to="/" replace />;
 }
 
+function CustomOrdersRoute() {
+  const { user } = useAuth();
+  return can(user?.role, 'MANAGE_CUSTOM_ORDERS') ? <CustomOrdersPage /> : <Navigate to="/" replace />;
+}
+
 export function App() {
   const { user } = useAuth();
 
@@ -61,6 +67,7 @@ export function App() {
         <Route path="/floor" element={<FloorRoute />} />
         <Route path="/catalog" element={<CatalogRoute />} />
         <Route path="/expenses" element={<ExpensesRoute />} />
+        <Route path="/custom-orders" element={<CustomOrdersRoute />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AppShell>

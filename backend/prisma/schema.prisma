@@ -64,6 +64,7 @@ model Tenant {
   kitchenTickets KitchenTicket[]
   payments  Payment[]
   expenses  Expense[]
+  customOrders CustomOrder[]
 
   @@map("tenants")
 }
@@ -89,6 +90,7 @@ model User {
   paymentsProcessed Payment[]   @relation("PaymentProcessedBy")
   discountsApplied  Discount[]  @relation("DiscountAppliedBy")
   expensesEntered   Expense[]   @relation("ExpenseEnteredBy")
+  customOrdersTaken CustomOrder[] @relation("CustomOrderTakenBy")
 
   @@index([tenantId])
   @@map("users")
@@ -116,6 +118,7 @@ model Product {
   createdAt           DateTime @default(now())
 
   orderItems OrderItem[]
+  customOrders CustomOrder[]
 
   @@index([tenantId])
   @@map("products")
@@ -252,4 +255,31 @@ model Expense {
 
   @@index([tenantId])
   @@map("expenses")
+}
+
+/// A special/made-to-order request that doesn't fit the walk-in table
+/// flow - a custom cake, a wholesale quantity of a regular product - taken
+/// ahead of the delivery date rather than served immediately. Deliberately
+/// separate from OrderItem: it has no table and needs a due date and
+/// deposit that per-item table billing has no place for.
+model CustomOrder {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id])
+  quantity        Int
+  /// Customization details - flavor, message, size, etc.
+  description     String?
+  /// Amount paid upfront to hold the order, in COP cents. May be 0 if no
+  /// deposit was collected.
+  depositCents    Int      @default(0)
+  deliveryDate    DateTime
+  fulfilled       Boolean  @default(false)
+  takenByUserId   String
+  takenByUser     User     @relation("CustomOrderTakenBy", fields: [takenByUserId], references: [id])
+  createdAt       DateTime @default(now())
+
+  @@index([tenantId])
+  @@map("custom_orders")
 }

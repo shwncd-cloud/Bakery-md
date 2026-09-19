@@ -37,7 +37,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           can(user?.role, 'TAKE_ORDER') ||
           can(user?.role, 'HANDLE_PAYMENT') ||
           can(user?.role, 'MANAGE_CATALOG') ||
-          can(user?.role, 'ENTER_EXPENSE')) && (
+          can(user?.role, 'ENTER_EXPENSE') ||
+          can(user?.role, 'MANAGE_CUSTOM_ORDERS')) && (
           <nav style={{ display: 'flex', gap: 18 }}>
             {(can(user?.role, 'TAKE_ORDER') || can(user?.role, 'HANDLE_PAYMENT') || can(user?.role, 'VIEW_DASHBOARD')) && (
               <NavLink to="/" style={navLinkStyle} end>
@@ -60,6 +61,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             {can(user?.role, 'ENTER_EXPENSE') && (
               <NavLink to="/expenses" style={navLinkStyle}>
                 Gastos
+              </NavLink>
+            )}
+            {can(user?.role, 'MANAGE_CUSTOM_ORDERS') && (
+              <NavLink to="/custom-orders" style={navLinkStyle}>
+                Pedidos especiales
               </NavLink>
             )}
           </nav>

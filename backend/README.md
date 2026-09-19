@@ -212,3 +212,27 @@ which had two real expense rows, and both came out the other side with
 their values intact under the new column name. `CreateExpenseDto`,
 `ExpensesService`, and both report paths (`ReportsService.getExpenseBreakdown`,
 `MonthlySummaryService`) all use `provider`/`voucherNumber` now.
+
+## Custom orders (post-launch)
+
+Added a `CustomOrder` model for made-to-order requests that don't fit the
+walk-in table flow - a special cake, a wholesale quantity of a regular
+product - taken ahead of a delivery date rather than served immediately.
+Deliberately a separate model from `OrderItem` rather than a table/order
+extension: it has no table, and needs a due date and deposit that
+per-item table billing has no place for. Fields: `productId` (an
+existing catalog product), `quantity`, an optional free-text
+`description` (flavor, message, size), `depositCents` (defaults to 0 -
+not every custom order takes a deposit), `deliveryDate`, and a
+`fulfilled` boolean toggled once delivered. `createdAt` doubles as "date
+the order was placed" without a separate field.
+
+New `MANAGE_CUSTOM_ORDERS` permission, granted to the same roles as
+`ENTER_EXPENSE` (Cashier, Manager, Owner) since taking a deposit is a
+money-handling action like entering an expense. `POST /custom-orders`,
+`GET /custom-orders` (sorted by delivery date, soonest first), and
+`PATCH /custom-orders/:id` (toggles `fulfilled`) - migration
+`custom_orders` creates the table fresh, no existing data to migrate.
+Verified live: created a custom order with a description and deposit,
+confirmed it renders correctly in the list, and confirmed toggling
+"Entregado" updates immediately and persists.

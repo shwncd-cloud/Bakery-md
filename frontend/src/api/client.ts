@@ -1,6 +1,7 @@
 import { enqueue, getQueue, removeFromQueue } from '../offline/outbox';
 import type {
   AuthUser,
+  CustomOrder,
   Discount,
   Expense,
   ExpenseBreakdownRow,
@@ -214,6 +215,27 @@ export function createExpense(provider: string, amountCents: number, description
 
 export function listExpenses() {
   return request<Expense[]>('GET', '/expenses');
+}
+
+// ---- Custom orders ----
+export interface CreateCustomOrderInput {
+  productId: string;
+  quantity: number;
+  description?: string;
+  depositCents?: number;
+  deliveryDate: string;
+}
+
+export function createCustomOrder(input: CreateCustomOrderInput) {
+  return request<CustomOrder>('POST', '/custom-orders', input);
+}
+
+export function listCustomOrders() {
+  return request<CustomOrder[]>('GET', '/custom-orders');
+}
+
+export function setCustomOrderFulfilled(id: string, fulfilled: boolean) {
+  return request<CustomOrder>('PATCH', `/custom-orders/${id}`, { fulfilled });
 }
 
 // ---- Reports ----

@@ -115,6 +115,19 @@ displays correctly in the Gastos list alongside pre-existing rows
 (rename preserved their data), and confirmed the Dashboard's expense
 card still totals correctly under the new field name.
 
+## Custom orders (post-launch)
+
+New "Pedidos especiales" page/nav link (`CustomOrdersPage`, gated by the
+new `MANAGE_CUSTOM_ORDERS` permission) for made-to-order requests taken
+ahead of a delivery date - a special cake, a wholesale quantity - rather
+than served immediately from a table. Form captures product (grouped by
+category, same picker convention as `AddItemModal`), quantity,
+description, deposit, and delivery date; the list shows both the date
+the order was placed and the delivery date, and a checkbox toggles
+"Entregado" once fulfilled. Verified live: created a custom order with a
+description and deposit, confirmed it displays correctly, and confirmed
+toggling delivered updates immediately.
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

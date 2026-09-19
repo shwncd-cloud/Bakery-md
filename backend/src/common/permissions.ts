@@ -15,6 +15,7 @@ export enum Permission {
   HANDLE_PAYMENT = 'HANDLE_PAYMENT',
   ENTER_EXPENSE = 'ENTER_EXPENSE',
   VIEW_DASHBOARD = 'VIEW_DASHBOARD',
+  MANAGE_CUSTOM_ORDERS = 'MANAGE_CUSTOM_ORDERS',
 }
 
 /// Static role -> permission matrix. ASSIGN_ROLES for OWNER is deliberately
@@ -37,8 +38,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.APPLY_DISCOUNT,
     Permission.HANDLE_PAYMENT,
     Permission.ENTER_EXPENSE,
+    Permission.MANAGE_CUSTOM_ORDERS,
   ],
-  MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE, Permission.MANAGE_CATALOG],
+  MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE, Permission.MANAGE_CATALOG, Permission.MANAGE_CUSTOM_ORDERS],
   CASHIER: [
     Permission.TAKE_ORDER,
     Permission.EDIT_PRE_KITCHEN_ITEM,
@@ -46,6 +48,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.APPLY_DISCOUNT,
     Permission.HANDLE_PAYMENT,
     Permission.ENTER_EXPENSE,
+    Permission.MANAGE_CUSTOM_ORDERS,
   ],
   WAITER: [Permission.TAKE_ORDER, Permission.EDIT_PRE_KITCHEN_ITEM, Permission.SEND_TO_KITCHEN],
   COOK: [],

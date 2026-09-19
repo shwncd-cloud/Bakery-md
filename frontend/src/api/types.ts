@@ -100,3 +100,15 @@ export interface ExpenseBreakdownRow {
   provider: string;
   totalCents: number;
 }
+
+export interface CustomOrder {
+  id: string;
+  productId: string;
+  product: Product;
+  quantity: number;
+  description: string | null;
+  depositCents: number;
+  deliveryDate: string;
+  fulfilled: boolean;
+  createdAt: string;
+}

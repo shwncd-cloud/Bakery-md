@@ -53,9 +53,11 @@ export interface KitchenTicket {
   orderItems: OrderItem[];
 }
 
+export type PaymentMethod = 'CASH' | 'NEQUI' | 'DAVIPLATA';
+
 export interface Payment {
   id: string;
-  method: 'CASH' | 'TRANSFER';
+  method: PaymentMethod;
   amountCents: number;
   orderItems: OrderItem[];
 }

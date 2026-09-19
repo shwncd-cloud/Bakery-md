@@ -7,6 +7,7 @@ import type {
   KitchenTicket,
   OrderItem,
   Payment,
+  PaymentMethod,
   Product,
   ProductBreakdownRow,
   ReportPeriod,
@@ -187,7 +188,7 @@ export interface OptimisticPayment extends Payment {
 
 export async function createPayment(
   orderItemIds: string[],
-  method: 'CASH' | 'TRANSFER',
+  method: PaymentMethod,
   items: OrderItem[],
 ): Promise<OptimisticPayment> {
   const body = { orderItemIds, method };

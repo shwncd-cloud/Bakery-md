@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useState } from 'react';
 import { ApiError } from '../api/client';
-import type { Product, TableSummary } from '../api/types';
+import type { PaymentMethod, Product, TableSummary } from '../api/types';
 import { formatCOP } from '../utils/money';
 
 function errorMessage(err: unknown): string {
@@ -162,9 +162,9 @@ export function PaymentModal({
 }: {
   totalCents: number;
   onClose: () => void;
-  onPay: (method: 'CASH' | 'TRANSFER') => Promise<void>;
+  onPay: (method: PaymentMethod) => Promise<void>;
 }) {
-  const [method, setMethod] = useState<'CASH' | 'TRANSFER'>('CASH');
+  const [method, setMethod] = useState<PaymentMethod>('CASH');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -189,9 +189,10 @@ export function PaymentModal({
       <form onSubmit={handleSubmit}>
         <div className="form-field">
           <label>Método de pago</label>
-          <select value={method} onChange={(e) => setMethod(e.target.value as 'CASH' | 'TRANSFER')}>
+          <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
             <option value="CASH">Efectivo</option>
-            <option value="TRANSFER">Transferencia</option>
+            <option value="NEQUI">Nequi</option>
+            <option value="DAVIPLATA">Daviplata</option>
           </select>
         </div>
         <div className="modal-actions">

@@ -182,3 +182,17 @@ bakery's categories are few and change rarely enough that owner-typed
 free text is simpler than a categories CRUD to maintain. `CreateProductDto`/
 `UpdateProductDto` both accept it as optional; existing products without
 one just show as uncategorized.
+
+## Payment methods: CASH/NEQUI/DAVIPLATA (post-launch)
+
+Replaced the generic `TRANSFER` enum value with the two Colombian
+digital wallets this bakery actually gets paid through - `NEQUI` and
+`DAVIPLATA` - since a generic "bank transfer" doesn't reflect how
+reconciliation actually works here (different wallet, different
+destination account). Postgres has no built-in way to remove an enum
+value, so migration `update_payment_methods` recreates the type and
+remaps any existing `TRANSFER` rows to `DAVIPLATA` rather than assuming
+none exist - verified against the local database, which genuinely had
+one historical `TRANSFER` payment from earlier testing, and it came out
+the other side as `DAVIPLATA` with everything else about that row
+untouched.

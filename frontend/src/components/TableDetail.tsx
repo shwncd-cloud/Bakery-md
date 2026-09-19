@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as api from '../api/client';
 import { OptimisticOrderItem } from '../api/client';
-import type { KitchenTicket, OrderItem, Product, TableSummary } from '../api/types';
+import type { KitchenTicket, OrderItem, PaymentMethod, Product, TableSummary } from '../api/types';
 import { can } from '../auth/permissions';
 import { useAuth } from '../auth/AuthContext';
 import { formatCOP } from '../utils/money';
@@ -124,7 +124,7 @@ export function TableDetail({
     });
   }
 
-  async function handlePay(method: 'CASH' | 'TRANSFER') {
+  async function handlePay(method: PaymentMethod) {
     await api.createPayment(Array.from(selectedForPayment), method, selectedItems);
     setSelectedForPayment(new Set());
     await loadItems();

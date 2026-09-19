@@ -90,6 +90,16 @@ links (Panel, Mesas, Catálogo, Gastos) appear, and taking a real order
 from the floor as the Owner works correctly (add item, discount, send to
 kitchen, payment checkbox all present).
 
+## Payment methods (post-launch)
+
+The cashier's payment dropdown now offers Efectivo, Nequi, and
+Daviplata (replacing the generic Transferencia option) - matches how
+this bakery actually gets paid. `PaymentMethod` is a single shared type
+in `api/types.ts` used by the client, `TableDetail`, and the payment
+modal, rather than repeating the literal union in each. Verified live:
+all three options render, and a real payment made with Nequi is
+recorded correctly.
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

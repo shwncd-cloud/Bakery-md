@@ -32,7 +32,8 @@ enum OrderItemStatus {
 
 enum PaymentMethod {
   CASH
-  TRANSFER
+  NEQUI
+  DAVIPLATA
 }
 
 enum DiscountType {

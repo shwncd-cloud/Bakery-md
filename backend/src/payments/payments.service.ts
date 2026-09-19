@@ -11,25 +11,48 @@ const UNSETTLEABLE_STATUSES: OrderItemStatus[] = [OrderItemStatus.PAID, OrderIte
 export class PaymentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /// Settles one or more OrderItems in a single payment. Per-item billing
-  /// is what makes this work for a shared table: a cashier can pay for
-  /// just the items one party ordered, leaving the rest of the table open.
+  /// Settles one or more OrderItems (or part of their quantity) in a
+  /// single payment. Per-item billing is what makes this work for a
+  /// shared table: a cashier can pay for just the items - or even just
+  /// some of the units of one item - that one party ordered, leaving the
+  /// rest of the table open.
   async create(tenantId: string, processedByUserId: string, dto: CreatePaymentDto) {
-    const uniqueIds = Array.from(new Set(dto.orderItemIds));
+    const requestedQuantities = new Map<string, number>();
+    for (const entry of dto.items) {
+      requestedQuantities.set(entry.orderItemId, (requestedQuantities.get(entry.orderItemId) ?? 0) + entry.quantity);
+    }
+    const ids = Array.from(requestedQuantities.keys());
     const items = await this.prisma.orderItem.findMany({
-      where: { id: { in: uniqueIds } },
+      where: { id: { in: ids } },
       include: { discounts: true },
     });
 
-    if (items.length !== uniqueIds.length || items.some((item) => item.tenantId !== tenantId)) {
+    if (items.length !== ids.length || items.some((item) => item.tenantId !== tenantId)) {
       throw new NotFoundException('One or more order items not found');
     }
     const alreadySettled = items.filter((item) => UNSETTLEABLE_STATUSES.includes(item.status));
     if (alreadySettled.length > 0) {
       throw new BadRequestException('One or more order items are already paid or canceled');
     }
+    for (const item of items) {
+      const requested = requestedQuantities.get(item.id)!;
+      if (requested > item.quantity) {
+        throw new BadRequestException(`Cannot pay for ${requested} units of an item that only has ${item.quantity}`);
+      }
+      // A discount is recorded against the whole line, not per unit, so
+      // splitting a discounted item into a paid/unpaid portion would make
+      // the discount's meaning ambiguous - block it rather than guess.
+      if (requested < item.quantity && item.discounts.length > 0) {
+        throw new BadRequestException(
+          'Cannot partially pay a discounted item - pay the full quantity, or remove the discount first',
+        );
+      }
+    }
 
-    const amountCents = items.reduce((sum, item) => sum + orderItemLineTotalCents(item, item.discounts), 0);
+    const amountCents = items.reduce((sum, item) => {
+      const requested = requestedQuantities.get(item.id)!;
+      return sum + (requested === item.quantity ? orderItemLineTotalCents(item, item.discounts) : item.unitPriceCents * requested);
+    }, 0);
 
     return this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.create({
@@ -41,10 +64,34 @@ export class PaymentsService {
           shift: getCurrentShift(),
         },
       });
-      await tx.orderItem.updateMany({
-        where: { id: { in: uniqueIds } },
-        data: { status: OrderItemStatus.PAID, paymentId: payment.id },
-      });
+
+      for (const item of items) {
+        const requested = requestedQuantities.get(item.id)!;
+        if (requested === item.quantity) {
+          await tx.orderItem.update({ where: { id: item.id }, data: { status: OrderItemStatus.PAID, paymentId: payment.id } });
+        } else {
+          // Split: shrink the original line (still owed, unpaid) and
+          // create a separate PAID row for the settled units, so the rest
+          // stays exactly as it was for whoever pays for it later.
+          await tx.orderItem.update({ where: { id: item.id }, data: { quantity: item.quantity - requested } });
+          await tx.orderItem.create({
+            data: {
+              tenantId,
+              tableId: item.tableId,
+              productId: item.productId,
+              quantity: requested,
+              unitPriceCents: item.unitPriceCents,
+              note: item.note,
+              status: OrderItemStatus.PAID,
+              takenByUserId: item.takenByUserId,
+              kitchenTicketId: item.kitchenTicketId,
+              paymentId: payment.id,
+              shift: item.shift,
+            },
+          });
+        }
+      }
+
       return tx.payment.findUnique({
         where: { id: payment.id },
         include: { orderItems: { include: { product: true } } },

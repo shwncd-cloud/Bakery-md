@@ -265,3 +265,24 @@ actually reach the kitchen ticket, not just the POS screen. Migration
 created an order item with a note through the API, confirmed it's
 stored and returned correctly, sent it to the kitchen, and confirmed
 the note appears in the rendered ticket text.
+
+## Partial-quantity payments (post-launch)
+
+Real usage surfaced that paying for one line of a multi-unit item (e.g.
+2 coffees) settled the whole line at once - there was no way to collect
+for just 1 of them and leave the other open for someone else to pay
+later. `POST /payments` now takes `items: [{ orderItemId, quantity }]`
+instead of a flat `orderItemIds` array. When `quantity` equals the
+item's full remaining quantity, behavior is unchanged (marks it PAID).
+When it's less, the service splits the line: the original row shrinks
+by the paid quantity and stays open (same status, same
+`kitchenTicketId` if it was already sent), and a new row is created for
+just the paid units, linked to the new payment. Partially paying a
+discounted item is rejected (400) - a discount is recorded against the
+whole line, so splitting it would make "how much of the discount
+applies to which half" ambiguous; pay the full quantity or remove the
+discount first. Verified live via direct API calls: paid 1 of 2 units,
+confirmed the payment settled for the correct partial amount, confirmed
+the remaining 1 unit stayed `ORDERED` and unpaid on the table, confirmed
+overpaying past the available quantity is rejected (400), and confirmed
+partial payment on a discounted item is rejected (400).

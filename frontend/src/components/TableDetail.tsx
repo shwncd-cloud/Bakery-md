@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as api from '../api/client';
 import { OptimisticOrderItem } from '../api/client';
+import type { PaymentSelection } from '../api/client';
 import type { KitchenTicket, OrderItem, PaymentMethod, Product, TableSummary } from '../api/types';
 import { can } from '../auth/permissions';
 import { useAuth } from '../auth/AuthContext';
@@ -39,7 +40,10 @@ export function TableDetail({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedForPayment, setSelectedForPayment] = useState<Set<string>>(new Set());
+  // orderItemId -> how many of its units to pay for. Defaults to the full
+  // quantity when selected, but can be reduced so a cashier can collect
+  // for part of a multi-unit line and leave the rest open for later.
+  const [selectedForPayment, setSelectedForPayment] = useState<Map<string, number>>(new Map());
   const [ticket, setTicket] = useState<KitchenTicket | null>(null);
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -72,8 +76,13 @@ export function TableDetail({
   if (!table) return null;
 
   const eligibleForKitchen = items.some((i) => i.status === 'ORDERED' && i.product.requiresKitchenTicket);
-  const selectedItems = items.filter((i) => selectedForPayment.has(i.id));
-  const selectedTotal = selectedItems.reduce((sum, i) => sum + lineTotalCents(i), 0);
+  const selectedEntries: PaymentSelection[] = items
+    .filter((i) => selectedForPayment.has(i.id))
+    .map((item) => ({ item, quantity: selectedForPayment.get(item.id)! }));
+  const selectedTotal = selectedEntries.reduce(
+    (sum, { item, quantity }) => sum + (quantity === item.quantity ? lineTotalCents(item) : item.unitPriceCents * quantity),
+    0,
+  );
 
   async function handleAdd(product: Product, quantity: number, note?: string) {
     if (!user) return;
@@ -115,18 +124,26 @@ export function TableDetail({
     await loadItems();
   }
 
-  function toggleSelection(itemId: string) {
+  function toggleSelection(item: OrderItem) {
     setSelectedForPayment((prev) => {
-      const next = new Set(prev);
-      if (next.has(itemId)) next.delete(itemId);
-      else next.add(itemId);
+      const next = new Map(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.set(item.id, item.quantity); // default: pay the full line, same as before
+      return next;
+    });
+  }
+
+  function setSelectedQuantity(item: OrderItem, quantity: number) {
+    setSelectedForPayment((prev) => {
+      const next = new Map(prev);
+      next.set(item.id, Math.min(item.quantity, Math.max(1, quantity)));
       return next;
     });
   }
 
   async function handlePay(method: PaymentMethod) {
-    await api.createPayment(Array.from(selectedForPayment), method, selectedItems);
-    setSelectedForPayment(new Set());
+    await api.createPayment(selectedEntries, method);
+    setSelectedForPayment(new Map());
     await loadItems();
   }
 
@@ -158,11 +175,24 @@ export function TableDetail({
           items.map((item) => (
             <div className="list-row" key={item.id}>
               {can(user?.role, 'HANDLE_PAYMENT') && payableStatuses.has(item.status) && (
-                <input
-                  type="checkbox"
-                  checked={selectedForPayment.has(item.id)}
-                  onChange={() => toggleSelection(item.id)}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedForPayment.has(item.id)}
+                    onChange={() => toggleSelection(item)}
+                  />
+                  {selectedForPayment.has(item.id) && item.quantity > 1 && !item.discounts?.length && (
+                    <input
+                      type="number"
+                      min={1}
+                      max={item.quantity}
+                      value={selectedForPayment.get(item.id)}
+                      onChange={(e) => setSelectedQuantity(item, Number(e.target.value))}
+                      title={`¿Cuántas de las ${item.quantity} unidades vas a cobrar?`}
+                      style={{ width: 52 }}
+                    />
+                  )}
+                </div>
               )}
               <div style={{ flex: 1 }}>
                 <div>
@@ -171,6 +201,11 @@ export function TableDetail({
                 </div>
                 {item.note && (
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Nota: {item.note}</div>
+                )}
+                {selectedForPayment.has(item.id) && selectedForPayment.get(item.id)! < item.quantity && (
+                  <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                    Cobrando {selectedForPayment.get(item.id)} de {item.quantity}
+                  </div>
                 )}
                 {item.discounts && item.discounts.length > 0 && (
                   <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>

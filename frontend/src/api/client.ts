@@ -189,12 +189,15 @@ export interface OptimisticPayment extends Payment {
   pendingSync?: boolean;
 }
 
-export async function createPayment(
-  orderItemIds: string[],
-  method: PaymentMethod,
-  items: OrderItem[],
-): Promise<OptimisticPayment> {
-  const body = { orderItemIds, method };
+export interface PaymentSelection {
+  item: OrderItem;
+  // How many of this item's units this payment settles - lets a cashier
+  // collect for part of a multi-unit line and leave the rest open.
+  quantity: number;
+}
+
+export async function createPayment(selections: PaymentSelection[], method: PaymentMethod): Promise<OptimisticPayment> {
+  const body = { items: selections.map((s) => ({ orderItemId: s.item.id, quantity: s.quantity })), method };
   try {
     return await request<Payment>('POST', '/payments', body);
   } catch (err) {
@@ -203,8 +206,8 @@ export async function createPayment(
     return {
       id: `local-${crypto.randomUUID()}`,
       method,
-      amountCents: items.reduce((sum, item) => sum + item.unitPriceCents * item.quantity, 0),
-      orderItems: items,
+      amountCents: selections.reduce((sum, s) => sum + s.item.unitPriceCents * s.quantity, 0),
+      orderItems: selections.map((s) => ({ ...s.item, quantity: s.quantity })),
       pendingSync: true,
     };
   }

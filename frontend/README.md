@@ -156,6 +156,22 @@ only the matching product, and an item added with a note displayed
 correctly both in the table view and (via a direct API check) in the
 rendered kitchen ticket text.
 
+## Partial-quantity payments (post-launch)
+
+Selecting a multi-unit item for payment (the checkbox in `TableDetail`)
+no longer commits the whole line - when the item's quantity is more than
+1 and it has no discount, a quantity stepper appears next to the
+checkbox (defaulting to the full quantity, same as before) letting the
+cashier collect for fewer units and leave the rest open. A "Cobrando X
+de Y" note appears under the item while a partial quantity is selected,
+and the "Cobrar seleccionados" total reflects just the selected units.
+`api.createPayment` now takes `{ item, quantity }` pairs instead of a
+flat list of IDs, matching the backend's new `items` shape - see the
+backend README for the split logic. Verified live: selected 1 of a
+3-unit line, confirmed the pay button showed the correct partial total,
+and confirmed that after paying, the remaining 2 units stayed on the
+table as an open, unpaid line.
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

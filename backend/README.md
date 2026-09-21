@@ -286,3 +286,62 @@ confirmed the payment settled for the correct partial amount, confirmed
 the remaining 1 unit stayed `ORDERED` and unpaid on the table, confirmed
 overpaying past the available quantity is rejected (400), and confirmed
 partial payment on a discounted item is rejected (400).
+
+## Fixed a server-timezone bug affecting "today" and shift boundaries (post-launch)
+
+Owner feedback that the dashboard's "day" period didn't line up with the
+actual calendar day led to finding the root cause: `getPeriodRange` and
+`getCurrentShift` used the server's own clock (`new Date().getHours()`,
+`.setHours()`), and Railway's containers run in UTC, not Bogotá time
+(UTC-5) - with no `TZ` env var set anywhere, "today" on the server
+actually ran from 7pm Bogotá the previous evening to 7pm today, silently
+misfiling roughly 5 hours of each day's sales into the wrong "day," and
+the shift boundary (`SHIFT_BOUNDARY_HOUR`) was off by the same 5 hours.
+
+Fixed with `src/common/timezone.util.ts`: Bogotá is UTC-5 year-round (no
+DST), so rather than depend on the host's timezone configuration (easy to
+get wrong silently, and varies by deploy target), boundaries are computed
+with an explicit fixed-offset conversion to Bogotá wall-clock time,
+using only UTC accessors so the math can't accidentally fall back to the
+server's own timezone. `period.util.ts` (`getPeriodRange`,
+`getPreviousMonthRange`), `shift.util.ts` (`getCurrentShift`), the
+kitchen ticket's printed timestamp, and the monthly summary email's cron
+schedule (now pinned to `timeZone: 'America/Bogota'`) all use it.
+Verified with a script that simulated the server running in UTC at an
+instant that's a different calendar day in Bogotá (`2026-09-21T02:00Z` =
+`2026-09-20` 9pm Bogotá) and confirmed `getPeriodRange('day', ...)`
+correctly resolved to the Bogotá Sept 20 boundaries
+(`2026-09-20T05:00Z` to `2026-09-21T05:00Z`), not the UTC Sept 21 ones.
+
+Also added `parseReportDate()` (used by `ReportQueryDto` on every report
+and payments endpoint) so a plain `date=YYYY-MM-DD` from a date picker
+is anchored to Bogotá noon of that date, not UTC midnight - parsing it
+naively would have landed on the *previous* Bogotá day once
+`getPeriodRange` converted it, undoing the fix for anyone browsing a
+specific past date.
+
+## Browse a specific date + delete a mistaken sale (post-launch)
+
+Two related admin-panel requests. First, every report endpoint already
+accepted an optional `date` alongside `period` - the frontend just
+wasn't exposing it; see the frontend README for the new date picker.
+
+Second, `GET /payments?period=&date=` lists payments for a period the
+same way the report endpoints do (gated by `VIEW_DASHBOARD`, since it's
+part of the same admin view), and `DELETE /payments/:id` (new
+`DELETE_PAYMENT` permission, granted to Owner and Manager - deliberately
+not Cashier, since erasing a sale is a correction/audit action, not
+routine payment handling) removes a mistakenly-recorded sale. Its order
+items don't just vanish: a line that never reached the kitchen
+(`kitchenTicketId` null) goes back to `ORDERED`, otherwise to `SERVED`
+(prep already happened, so it shouldn't be re-queued), with `paymentId`
+cleared - the item reappears as open/unpaid on its table. One known
+simplification: if the deleted payment came from splitting a multi-unit
+line (see partial-quantity payments above), the reverted portion
+reappears as its own separate line rather than re-merging into the
+original one - amounts stay correct, it just shows as two rows instead
+of one, which was judged an acceptable tradeoff against the complexity
+of tracking split lineage. Verified live: created a sale, confirmed the
+paid item was gone from the table, deleted the payment via the API,
+confirmed the item reappeared as `ORDERED`/unpaid, and confirmed the
+payment itself now 404s.

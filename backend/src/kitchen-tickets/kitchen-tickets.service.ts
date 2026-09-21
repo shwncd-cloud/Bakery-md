@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemStatus, Prisma } from '@prisma/client';
+import { BOGOTA_TIME_ZONE } from '../common/timezone.util';
 import { PrismaService } from '../prisma/prisma.service';
 
 type TicketWithItems = Prisma.KitchenTicketGetPayload<{
@@ -93,7 +94,7 @@ export class KitchenTicketsService {
     const lines = [
       'KITCHEN TICKET',
       `Table: ${ticket.table.label}`,
-      new Date().toLocaleString('es-CO'),
+      new Date().toLocaleString('es-CO', { timeZone: BOGOTA_TIME_ZONE }),
       '------------------------',
       ...ticket.orderItems.map((item) => `${item.quantity}x ${item.product.name}${item.note ? ` - ${item.note}` : ''}`),
       '------------------------',

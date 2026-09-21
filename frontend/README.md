@@ -172,6 +172,29 @@ backend README for the split logic. Verified live: selected 1 of a
 and confirmed that after paying, the remaining 2 units stayed on the
 table as an open, unpaid line.
 
+## Dashboard: period dropdown, date picker, sales list + delete (post-launch)
+
+Three related admin-panel requests. The period selector (Día/Semana/Mes/
+.../Año) is now a `<select>` dropdown instead of a row of buttons. A
+date picker sits next to it (defaulting to today, in the browser's own
+local date - not `toISOString()`, which is UTC and can read as the wrong
+day near midnight) so the owner can browse any past day/week/etc, not
+just the current one - both are passed as `period`/`date` to every
+report call, which the backend already supported (see the backend
+README for the timezone fix that also landed with this, so "today"
+actually means today).
+
+A new "Ventas registradas" card lists that period's individual sales
+(items, time, method, total), with an "Eliminar" button - shown only for
+Owner/Manager (`DELETE_PAYMENT`) - for removing a mistaken entry (a
+test, a wrong item) after a confirm prompt; deleting reloads the whole
+dashboard so the summary/breakdowns stay in sync with what's left.
+Verified live: confirmed the period control is a real `<select>` and the
+date input is a real date picker, confirmed a freshly-created sale
+appears in "Ventas registradas," and confirmed clicking "Eliminar"
+removes it from the list (and, per the backend README, correctly
+reopens its order item).
+
 ## Docker
 
 `Dockerfile` is a portable fallback for self-hosting the built static

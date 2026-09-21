@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { OrderItemStatus } from '@prisma/client';
+import { getPeriodRange, ReportPeriod } from '../common/period.util';
 import { orderItemLineTotalCents } from '../common/order-item-pricing.util';
 import { getCurrentShift } from '../common/shift.util';
 import { PrismaService } from '../prisma/prisma.service';
@@ -108,5 +109,49 @@ export class PaymentsService {
       throw new NotFoundException('Payment not found');
     }
     return payment;
+  }
+
+  /// Powers the admin panel's "browse a specific day/week/etc" view -
+  /// same period/date semantics as the reports endpoints.
+  findAllForTenant(tenantId: string, period: ReportPeriod, date?: Date) {
+    const { start, end } = getPeriodRange(period, date);
+    return this.prisma.payment.findMany({
+      where: { tenantId, createdAt: { gte: start, lt: end } },
+      include: { orderItems: { include: { product: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /// Erases a mistakenly-recorded sale (e.g. a test entry). Its order
+  /// items go back to being open/unpaid rather than vanishing - a line
+  /// that never went to the kitchen (no kitchenTicketId) returns to
+  /// ORDERED, otherwise to SERVED, since kitchen prep already happened
+  /// and shouldn't be re-queued. If this payment came from splitting a
+  /// multi-unit line, the reverted portion reappears as its own line
+  /// rather than re-merging into the original one - the amounts are still
+  /// correct, it just shows as two rows instead of one.
+  async remove(tenantId: string, paymentId: string) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { orderItems: true },
+    });
+    if (!payment || payment.tenantId !== tenantId) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const item of payment.orderItems) {
+        await tx.orderItem.update({
+          where: { id: item.id },
+          data: {
+            status: item.kitchenTicketId ? OrderItemStatus.SERVED : OrderItemStatus.ORDERED,
+            paymentId: null,
+          },
+        });
+      }
+      await tx.payment.delete({ where: { id: paymentId } });
+    });
+
+    return { id: paymentId, deleted: true };
   }
 }

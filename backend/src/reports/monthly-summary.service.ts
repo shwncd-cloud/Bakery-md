@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { Role } from '@prisma/client';
 import { EmailService } from '../email/email.service';
 import { getPreviousMonthRange } from '../common/period.util';
+import { BOGOTA_TIME_ZONE } from '../common/timezone.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { ReportsService } from './reports.service';
 
@@ -26,7 +27,7 @@ export class MonthlySummaryService {
     private readonly emailService: EmailService,
   ) {}
 
-  @Cron('0 6 1 * *')
+  @Cron('0 6 1 * *', { timeZone: BOGOTA_TIME_ZONE })
   async sendForAllTenants() {
     const tenants = await this.prisma.tenant.findMany();
     for (const tenant of tenants) {

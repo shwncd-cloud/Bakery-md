@@ -208,6 +208,7 @@ export async function createPayment(selections: PaymentSelection[], method: Paym
       method,
       amountCents: selections.reduce((sum, s) => sum + s.item.unitPriceCents * s.quantity, 0),
       orderItems: selections.map((s) => ({ ...s.item, quantity: s.quantity })),
+      createdAt: new Date().toISOString(),
       pendingSync: true,
     };
   }
@@ -244,24 +245,37 @@ export function setCustomOrderFulfilled(id: string, fulfilled: boolean) {
 }
 
 // ---- Reports ----
-export function getSalesSummary(period: ReportPeriod) {
-  return request<SalesSummary>('GET', `/reports/summary?period=${period}`);
+function periodQuery(period: ReportPeriod, date?: string): string {
+  return `period=${period}${date ? `&date=${date}` : ''}`;
 }
 
-export function getProductBreakdown(period: ReportPeriod) {
-  return request<ProductBreakdownRow[]>('GET', `/reports/products?period=${period}`);
+export function getSalesSummary(period: ReportPeriod, date?: string) {
+  return request<SalesSummary>('GET', `/reports/summary?${periodQuery(period, date)}`);
 }
 
-export function getWaiterPerformance(period: ReportPeriod) {
-  return request<WaiterPerformanceRow[]>('GET', `/reports/waiters?period=${period}`);
+export function getProductBreakdown(period: ReportPeriod, date?: string) {
+  return request<ProductBreakdownRow[]>('GET', `/reports/products?${periodQuery(period, date)}`);
 }
 
-export function getExpenseBreakdown(period: ReportPeriod) {
-  return request<ExpenseBreakdownRow[]>('GET', `/reports/expenses?period=${period}`);
+export function getWaiterPerformance(period: ReportPeriod, date?: string) {
+  return request<WaiterPerformanceRow[]>('GET', `/reports/waiters?${periodQuery(period, date)}`);
+}
+
+export function getExpenseBreakdown(period: ReportPeriod, date?: string) {
+  return request<ExpenseBreakdownRow[]>('GET', `/reports/expenses?${periodQuery(period, date)}`);
 }
 
 export function triggerMonthlySummary() {
   return request<{ sent: number; totalRecipients: number }>('POST', '/reports/monthly-summary/trigger');
+}
+
+// ---- Payments (admin panel: browse and, for a mistaken entry, delete) ----
+export function listPayments(period: ReportPeriod, date?: string) {
+  return request<Payment[]>('GET', `/payments?${periodQuery(period, date)}`);
+}
+
+export function deletePayment(id: string) {
+  return request<{ id: string; deleted: boolean }>('DELETE', `/payments/${id}`);
 }
 
 // ---- Offline outbox flushing ----

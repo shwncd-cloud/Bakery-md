@@ -61,6 +61,7 @@ export interface Payment {
   method: PaymentMethod;
   amountCents: number;
   orderItems: OrderItem[];
+  createdAt: string;
 }
 
 export interface Expense {

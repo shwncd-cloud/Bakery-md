@@ -16,6 +16,10 @@ export enum Permission {
   ENTER_EXPENSE = 'ENTER_EXPENSE',
   VIEW_DASHBOARD = 'VIEW_DASHBOARD',
   MANAGE_CUSTOM_ORDERS = 'MANAGE_CUSTOM_ORDERS',
+  /// Erasing a recorded sale - a correction/admin action, deliberately
+  /// separate from HANDLE_PAYMENT (day-to-day cash handling): only
+  /// whoever can already see the dashboard should be able to do this.
+  DELETE_PAYMENT = 'DELETE_PAYMENT',
 }
 
 /// Static role -> permission matrix. ASSIGN_ROLES for OWNER is deliberately
@@ -39,8 +43,15 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.HANDLE_PAYMENT,
     Permission.ENTER_EXPENSE,
     Permission.MANAGE_CUSTOM_ORDERS,
+    Permission.DELETE_PAYMENT,
   ],
-  MANAGER: [Permission.VIEW_DASHBOARD, Permission.ENTER_EXPENSE, Permission.MANAGE_CATALOG, Permission.MANAGE_CUSTOM_ORDERS],
+  MANAGER: [
+    Permission.VIEW_DASHBOARD,
+    Permission.ENTER_EXPENSE,
+    Permission.MANAGE_CATALOG,
+    Permission.MANAGE_CUSTOM_ORDERS,
+    Permission.DELETE_PAYMENT,
+  ],
   CASHIER: [
     Permission.TAKE_ORDER,
     Permission.EDIT_PRE_KITCHEN_ITEM,
